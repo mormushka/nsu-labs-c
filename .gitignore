@@ -1,0 +1,9 @@
+**/.idea/
+**/cmake-build*/
+build/
+build*
+.vscode
+main
+main.exe
+in.txt
+out.txt
