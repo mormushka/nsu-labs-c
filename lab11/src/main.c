@@ -1,37 +1,36 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define MAX_N 1000
-
-void printItems(const int n, int w, int *weight, int *value, int (*dp)[MAX_N + 1])
+void printItems(const int n, const int w, int *weight, int  *cost, void *dpp)
 {
-    int weight_r[n];
-    int value_r[n];
+    int (*dp)[w + 1] = dpp;
+    int *r_weight = calloc(n, sizeof(int));
+    int *r_cost = calloc(n, sizeof(int));
 
-    int j = w;
     printf("%d\n", dp[n][w]);
 
-    for (int i = n; i > 0 && dp[i][j] > 0; --i)
+    int j = w;
+    for (int i = n; i > 0; --i)
     {
         if (dp[i][j] != dp[i - 1][j])
         {   
-            weight_r[i - 1] = weight[i - 1];
-            value_r[i - 1] = value[i - 1];
+            r_weight[i - 1] = weight[i - 1];
+            r_cost[i - 1] = cost[i - 1];
             j -= weight[i - 1];
         }
     }
     for (int i = 0; i < n; ++i)
     {
-        if ((weight_r[i] != 0) && (value_r[i] != 0))
+        if ((r_weight[i] != 0) && (r_cost[i] != 0))
         {
-            printf("%d %d\n", weight_r[i], value_r[i]);
+            printf("%d %d\n", r_weight[i], r_cost[i]);
         }
     }
 }
 
-void knapsack(int n, int w, int *weight, int *value)
+void knapsack(const int n, const int w, int *weight, int *cost)
 {
-    int dp[n + 1][MAX_N + 1];
+    int dp[n + 1][w + 1];
 
     for (int i = 0; i <= n; ++i)
     {
@@ -43,16 +42,9 @@ void knapsack(int n, int w, int *weight, int *value)
             }
             else if (weight[i - 1] <= j)
             {
-                int includeItem = value[i - 1] + dp[i - 1][j - weight[i - 1]];
-                int excludeItem = dp[i - 1][j];
-                if (includeItem > excludeItem)
-                {
-                    dp[i][j] = includeItem;
-                }
-                else
-                {
-                    dp[i][j] = excludeItem;
-                }
+                int previous_maximum = dp[i - 1][j];
+                int cost_with_free_space = cost[i - 1] + dp[i - 1][j - weight[i - 1]];
+                dp[i][j] = (previous_maximum > cost_with_free_space) ? previous_maximum : cost_with_free_space;
             }
             else
             {
@@ -61,7 +53,7 @@ void knapsack(int n, int w, int *weight, int *value)
         }
     }
 
-    printItems(n, w, weight, value, dp);
+    printItems(n, w, weight, cost, dp);
 }
 
 
@@ -75,13 +67,13 @@ int main()
         return EXIT_FAILURE;
     }
 
-    int weight[n], value[n];
+    int weight[n], cost[n];
     for (int i = 0; i < n; ++i)
     {
-        scanf("%d %d", &weight[i], &value[i]);
+        scanf("%d %d", &weight[i], &cost[i]);
     }
 
-    knapsack(n, w, weight, value);
+    knapsack(n, w, weight, cost);
 
     return 0;
 }
