@@ -3,10 +3,10 @@
 
 #define MAX_N 1000
 
-void printItems(int n, int w, int *weight, int *value, int **dp)
+void printItems(const int n, int w, int *weight, int *value, int (*dp)[MAX_N + 1])
 {
-    int weight_r[MAX_N] = { 0 };
-    int value_r[MAX_N] = { 0 };
+    int weight_r[n];
+    int value_r[n];
 
     int j = w;
     printf("%d\n", dp[n][w]);
@@ -31,7 +31,7 @@ void printItems(int n, int w, int *weight, int *value, int **dp)
 
 void knapsack(int n, int w, int *weight, int *value)
 {
-    int dp[MAX_N + 1][MAX_N + 1];
+    int dp[n + 1][MAX_N + 1];
 
     for (int i = 0; i <= n; ++i)
     {
@@ -61,13 +61,13 @@ void knapsack(int n, int w, int *weight, int *value)
         }
     }
 
-    printItems(n, w, weight, value, (int **)dp);
+    printItems(n, w, weight, value, dp);
 }
 
 
 int main()
 {
-    FILE *in = freopen("../in.txt", "r", stdin);
+    //FILE *in = freopen("../in.txt", "r", stdin);
     int n, w;
     if (scanf("%d %d", &n, &w) < 2)
     {
@@ -75,7 +75,7 @@ int main()
         return EXIT_FAILURE;
     }
 
-    int weight[MAX_N], value[MAX_N];
+    int weight[n], value[n];
     for (int i = 0; i < n; ++i)
     {
         scanf("%d %d", &weight[i], &value[i]);
