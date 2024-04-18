@@ -21,7 +21,7 @@ void printItems(const int n, const int w, int *weight, int  *cost, void *dpp)
     }
     for (int i = 0; i < n; ++i)
     {
-        if ((r_weight[i] != 0) && (r_cost[i] != 0))
+        if (r_weight[i] != 0)
         {
             printf("%d %d\n", r_weight[i], r_cost[i]);
         }
