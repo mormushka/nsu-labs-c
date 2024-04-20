@@ -4,7 +4,10 @@
 
 typedef unsigned long long uint64;
 
-// dijkstra_algorithm(int S, void *adjacency_matrix);
+typedef struct v {
+    uint64 data;
+    int inf;
+} v;
 
 int is_bad_vertex(const unsigned v, const unsigned N) 
 {
@@ -61,9 +64,9 @@ void *input_graph(const unsigned N, const unsigned S, const unsigned F, const un
         return NULL;
     }
 
-    uint64(*adjacency_matrix)[N] = calloc(N * N, sizeof(uint64));
+    uint64(*adjacency_matrix)[N + 1] = calloc((N + 1) * (N + 1), sizeof(uint64));
 
-    for (int i = 0; i <= M; ++i)
+    for (int i = 0; i < M; ++i)
     {
         unsigned s_edge, f_edge;
         uint64 len_edge;
@@ -75,14 +78,29 @@ void *input_graph(const unsigned N, const unsigned S, const unsigned F, const un
         }
 
         adjacency_matrix[s_edge][f_edge] = len_edge;
+        printf("--------------iteration %d---------------\n", i);
+        printf("[%u][%u] = %llu;\n", s_edge, f_edge, len_edge);
+        printf("[%u][%u] = %llu;\n", s_edge, f_edge, adjacency_matrix[s_edge][f_edge]);
     }
 
     return adjacency_matrix;
 }
 
+uint64 *dijkstra_algorithm(const unsigned S, void *a_matrix, const unsigned N) 
+{
+    uint64(*adjacency_matrix)[N] = a_matrix;
+
+    
+    v *T = calloc(N, sizeof(v));
+
+
+
+    free(T);
+}
+
 int main()
 {
-    //FILE *in = freopen("../in.txt", "r", stdin);
+    FILE *in = freopen("../in.txt", "r", stdin);
 
     unsigned N, S, F, M;
     if (scanf("%u %u %u %u", &N, &S, &F, &M) < 4)
@@ -91,13 +109,27 @@ int main()
         return EXIT_FAILURE;
     }
 
-    uint64(*adjacency_matrix)[N] = input_graph(N, S, F, M);
+    uint64(*adjacency_matrix)[N + 1] = input_graph(N, S, F, M);
     if (adjacency_matrix == NULL)
     {
+        free(adjacency_matrix);
         return EXIT_SUCCESS;
     }
+    
+    
+    for (int i = 1; i < N + 1; ++i)
+    {
+        for (int j = 1; j < N + 1; ++j)
+        {
+            uint64 b = adjacency_matrix[i][j];
+            printf("%llu ", adjacency_matrix[i][j]);
+        }
+        printf("\n");
+    }
+    
 
-    // uint64 *path = dijkstra_algorithm(S, adjacency_matrix);
+    //uint64 *path = dijkstra_algorithm(S, adjacency_matrix, N);
 
+    free(adjacency_matrix);
     return EXIT_SUCCESS;
 }
