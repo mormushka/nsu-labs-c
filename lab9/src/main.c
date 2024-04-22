@@ -6,6 +6,20 @@
 
 #define DEBUG1
 
+typedef struct list
+{
+    int value;
+    struct list *next;
+} list;
+
+void push(list** l, int value)
+{
+    list* new = malloc(sizeof(list));
+    new->value = value;
+    new->next = *l;
+    *l = new;
+}
+
 typedef struct path
 {
     uint64_t *costs;
@@ -15,7 +29,7 @@ typedef struct path
 typedef struct dijkstra_protocol
 {
     uint64_t *costs;
-    int *parents;
+    list **parents;
 } dijkstra_protocol;
 
 int is_bad_vertex(const unsigned v, const unsigned N)
@@ -123,7 +137,7 @@ dijkstra_protocol *dijkstra_algorithm(const unsigned S, void *a_matrix, const un
     uint64_t(*adjacency_matrix)[N + 1] = a_matrix;
 
     uint64_t *costs = calloc(N + 1, sizeof(uint64_t));
-    int *parents = calloc(N + 1, sizeof(int));
+    list **parents = calloc(N + 1, sizeof(list));
     char *processed = calloc(N + 1, sizeof(char));
     if ((costs == NULL) || (parents == NULL) || (processed == NULL))
     {
@@ -146,10 +160,11 @@ dijkstra_protocol *dijkstra_algorithm(const unsigned S, void *a_matrix, const un
             if (adjacency_matrix[node][i])
             {
                 uint64_t new_cost = cost_node + adjacency_matrix[node][i];
-                if (new_cost < costs[i])
+                if (new_cost <= costs[i])
                 {
                     costs[i]= new_cost;
-                    parents[i] = node;
+                    //parents[i] = node;
+                    push(&parents[i], node);
                 }
             }
         }
@@ -161,9 +176,9 @@ dijkstra_protocol *dijkstra_algorithm(const unsigned S, void *a_matrix, const un
     printf("costs:     ");
     for (int i = 1; i <= N; ++i)
     {
-        if (costs[i].n_inf)
+        if (costs[i] != UINT64_MAX)
         {
-            printf("%lu ", costs[i].value);
+            printf("%lu ", costs[i]);
         }
         else
         {
@@ -175,7 +190,20 @@ dijkstra_protocol *dijkstra_algorithm(const unsigned S, void *a_matrix, const un
     printf("parents:   ");
     for (int i = 1; i <= N; ++i)
     {
-        printf("%d ", parents[i]);
+        if(parents[i]) 
+        {
+            //printf("%d ", parents[i]->value);
+            list *tmp = parents[i];
+            while (tmp != NULL) 
+            {
+                printf("|%d|", tmp->value);
+                tmp = tmp->next;
+            }
+        }
+        else
+        {
+            printf("n ");
+        }
     }
     printf("\n");
 
@@ -194,6 +222,25 @@ dijkstra_protocol *dijkstra_algorithm(const unsigned S, void *a_matrix, const un
     // free(parents);
     free(processed);
     return d_protocol;
+}
+
+int check_num_paths(list **parents, int f) 
+{
+    if (parents[f] == NULL)
+    {
+        return 1;
+    }
+    else 
+    {
+        int num_path = 0;
+        list *tmp = parents[f];
+        while (tmp != NULL) 
+        {
+            num_path += check_num_paths(parents, tmp->value);
+            tmp = tmp->next;
+        }
+        return num_path;
+    }
 }
 
 void print_dijkstra(dijkstra_protocol *d_protocol, const int N, const int S, const int F)
@@ -222,7 +269,9 @@ void print_dijkstra(dijkstra_protocol *d_protocol, const int N, const int S, con
     }
     else if (d_protocol->costs[F] > INT_MAX)
     {
-        int c = 0;
+        int num_paths = check_num_paths(d_protocol->parents, F);
+
+        /*int c = 0;
         int i = F;
         if (d_protocol->costs[i] > INT_MAX)
         {
@@ -235,9 +284,9 @@ void print_dijkstra(dijkstra_protocol *d_protocol, const int N, const int S, con
             {
                 c++;
             }
-        }
+        }*/
 
-        if (c > 1)
+        if (num_paths > 1)
         {
             printf("overflow");
         }
@@ -247,7 +296,7 @@ void print_dijkstra(dijkstra_protocol *d_protocol, const int N, const int S, con
             printf("%d ", i);
             while (i != S)
             {
-                i = d_protocol->parents[i];
+                i = d_protocol->parents[i]->value;
                 printf("%d ", i);
             }
         }
@@ -258,7 +307,7 @@ void print_dijkstra(dijkstra_protocol *d_protocol, const int N, const int S, con
         printf("%d ", i);
         while (i != S)
         {
-            i = d_protocol->parents[i];
+            i = d_protocol->parents[i]->value;
             printf("%d ", i);
         }
     }
