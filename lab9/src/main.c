@@ -6,17 +6,15 @@
 
 #define DEBUG1
 
-typedef unsigned long long uint64;
-
 typedef struct path
 {
-    uint64 *costs;
+    uint64_t *costs;
     int *parents;
 } path;
 
 typedef struct dijkstra_protocol
 {
-    uint64 *costs;
+    uint64_t *costs;
     int *parents;
 } dijkstra_protocol;
 
@@ -25,9 +23,9 @@ int is_bad_vertex(const unsigned v, const unsigned N)
     return (v == 0) || (v > N);
 }
 
-int input_line(unsigned *s_edge, unsigned *f_edge, uint64 *len_edge, const unsigned N)
+int input_line(unsigned *s_edge, unsigned *f_edge, uint64_t *len_edge, const unsigned N)
 {
-    int a = scanf("%u %u %llu", s_edge, f_edge, len_edge);
+    int a = scanf("%u %u %lu", s_edge, f_edge, len_edge);
     if (a == EOF)
     {
         printf("bad number of lines");
@@ -75,12 +73,12 @@ void *input_graph(const unsigned N, const unsigned S, const unsigned F, const un
         return NULL;
     }
 
-    uint64(*adjacency_matrix)[N + 1] = calloc((N + 1) * (N + 1), sizeof(uint64));
+    uint64_t(*adjacency_matrix)[N + 1] = calloc((N + 1) * (N + 1), sizeof(uint64_t));
 
     for (int i = 0; i < M; ++i)
     {
         unsigned s_edge, f_edge;
-        uint64 len_edge;
+        uint64_t len_edge;
 
         if (!input_line(&s_edge, &f_edge, &len_edge, N))
         {
@@ -95,10 +93,10 @@ void *input_graph(const unsigned N, const unsigned S, const unsigned F, const un
     return adjacency_matrix;
 }
 
-int find_lovest_cost_node(uint64 *costs, char *processed, const int N)
+int find_lovest_cost_node(uint64_t *costs, char *processed, const int N)
 {
     int lovest_cost_node = 0;
-    uint64 lovest_cost = UINT64_MAX;
+    uint64_t lovest_cost = UINT64_MAX;
 
     for (int i = 1; i <= N; ++i)
     {
@@ -112,7 +110,7 @@ int find_lovest_cost_node(uint64 *costs, char *processed, const int N)
     return lovest_cost_node;
 }
 
-void init_costs(uint64* costs, const int N)
+void init_costs(uint64_t* costs, const int N)
 {
     for (int i = 1; i <= N; ++i)
     {
@@ -122,9 +120,9 @@ void init_costs(uint64* costs, const int N)
 
 dijkstra_protocol *dijkstra_algorithm(const unsigned S, void *a_matrix, const unsigned N)
 {
-    uint64(*adjacency_matrix)[N + 1] = a_matrix;
+    uint64_t(*adjacency_matrix)[N + 1] = a_matrix;
 
-    uint64 *costs = calloc(N + 1, sizeof(uint64));
+    uint64_t *costs = calloc(N + 1, sizeof(uint64_t));
     int *parents = calloc(N + 1, sizeof(int));
     char *processed = calloc(N + 1, sizeof(char));
     if ((costs == NULL) || (parents == NULL) || (processed == NULL))
@@ -142,12 +140,12 @@ dijkstra_protocol *dijkstra_algorithm(const unsigned S, void *a_matrix, const un
     int node = find_lovest_cost_node(costs, processed, N);
     while (node)
     {
-        uint64 cost_node = costs[node];
+        uint64_t cost_node = costs[node];
         for (int i = 1; i <= N; ++i)
         {
             if (adjacency_matrix[node][i])
             {
-                uint64 new_cost = cost_node + adjacency_matrix[node][i];
+                uint64_t new_cost = cost_node + adjacency_matrix[node][i];
                 if (new_cost < costs[i])
                 {
                     costs[i]= new_cost;
@@ -165,7 +163,7 @@ dijkstra_protocol *dijkstra_algorithm(const unsigned S, void *a_matrix, const un
     {
         if (costs[i].n_inf)
         {
-            printf("%llu ", costs[i].value);
+            printf("%lu ", costs[i].value);
         }
         else
         {
@@ -212,7 +210,7 @@ void print_dijkstra(dijkstra_protocol *d_protocol, const int N, const int S, con
         }
         else
         {
-            printf("%llu ", d_protocol->costs[i]);
+            printf("%lu ", d_protocol->costs[i]);
         }
     }
 
@@ -283,7 +281,7 @@ int main()
         return EXIT_FAILURE;
     }
 
-    uint64(*adjacency_matrix)[N + 1] = input_graph(N, S, F, M);
+    uint64_t(*adjacency_matrix)[N + 1] = input_graph(N, S, F, M);
     if (adjacency_matrix == NULL)
     {
         free(adjacency_matrix);
@@ -300,7 +298,7 @@ int main()
         printf("children %d : ", i);
         for (int j = 1; j < N + 1; ++j)
         {
-            printf("%llu ", adjacency_matrix[i][j]);
+            printf("%lu ", adjacency_matrix[i][j]);
         }
         printf("\n");
     }
