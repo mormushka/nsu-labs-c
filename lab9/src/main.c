@@ -36,9 +36,9 @@ int is_bad_vertex(const unsigned v, const unsigned N)
     return (v == 0) || (v > N);
 }
 
-int input_line(unsigned *s_edge, unsigned *f_edge, uint64_t *len_edge, const unsigned N)
+int input_line(unsigned *s_edge, unsigned *f_edge, unsigned *len_edge, const unsigned N)
 {
-    int a = scanf("%u %u %lu", s_edge, f_edge, len_edge);
+    int a = scanf("%u %u %u", s_edge, f_edge, len_edge);
     if (a == EOF)
     {
         printf("bad number of lines");
@@ -86,12 +86,12 @@ void *input_graph(const unsigned N, const unsigned S, const unsigned F, const un
         return NULL;
     }
 
-    uint64_t(*adjacency_matrix)[N + 1] = calloc((N + 1) * (N + 1), sizeof(uint64_t));
+    unsigned(*adjacency_matrix)[N + 1] = calloc((N + 1) * (N + 1), sizeof(unsigned));
 
     for (int i = 0; i < M; ++i)
     {
         unsigned s_edge, f_edge;
-        uint64_t len_edge;
+        unsigned len_edge;
 
         if (!input_line(&s_edge, &f_edge, &len_edge, N))
         {
@@ -133,7 +133,7 @@ void init_costs(uint64_t *costs, const int N)
 
 dijkstra_protocol *dijkstra_algorithm(const unsigned S, void *a_matrix, const unsigned N)
 {
-    uint64_t(*adjacency_matrix)[N + 1] = a_matrix;
+    unsigned(*adjacency_matrix)[N + 1] = a_matrix;
 
     uint64_t *costs = calloc(N + 1, sizeof(uint64_t));
     list **parents = calloc(N + 1, sizeof(list));
@@ -323,7 +323,7 @@ int main()
         return EXIT_FAILURE;
     }
 
-    uint64_t(*adjacency_matrix)[N + 1] = input_graph(N, S, F, M);
+    unsigned(*adjacency_matrix)[N + 1] = input_graph(N, S, F, M);
     if (adjacency_matrix == NULL)
     {
         free(adjacency_matrix);
@@ -340,7 +340,7 @@ int main()
         printf("children %d : ", i);
         for (int j = 1; j < N + 1; ++j)
         {
-            printf("%lu ", adjacency_matrix[i][j]);
+            printf("%u ", adjacency_matrix[i][j]);
         }
         printf("\n");
     }
