@@ -1,20 +1,22 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <limits.h>
+#include <stdint.h>
+
 
 #define DEBUG1
 
 typedef unsigned long long uint64;
 
-typedef struct cost
+typedef struct path
 {
-    uint64 value;
-    int n_inf;
-} cost;
+    uint64 *costs;
+    int *parents;
+} path;
 
 typedef struct dijkstra_protocol
 {
-    cost *costs;
+    uint64 *costs;
     int *parents;
 } dijkstra_protocol;
 
@@ -93,31 +95,36 @@ void *input_graph(const unsigned N, const unsigned S, const unsigned F, const un
     return adjacency_matrix;
 }
 
-int find_lovest_cost_node(cost *costs, char *processed, const int N)
+int find_lovest_cost_node(uint64 *costs, char *processed, const int N)
 {
     int lovest_cost_node = 0;
-    cost lovest_cost = {0, 0};
+    uint64 lovest_cost = UINT64_MAX;
 
     for (int i = 1; i <= N; ++i)
     {
-        if (processed[i] == 0)
+        if ((!processed[i]) && (costs[i] < lovest_cost))
         {
-            if ((costs[i].n_inf) && ((costs[i].value < lovest_cost.value) || (lovest_cost.n_inf == 0)))
-            {
-                lovest_cost = costs[i];
-                lovest_cost_node = i;
-            }
+            lovest_cost = costs[i];
+            lovest_cost_node = i;
         }
     }
 
     return lovest_cost_node;
 }
 
+void init_costs(uint64* costs, const int N)
+{
+    for (int i = 1; i <= N; ++i)
+    {
+        costs[i] = UINT64_MAX;
+    }
+}
+
 dijkstra_protocol *dijkstra_algorithm(const unsigned S, void *a_matrix, const unsigned N)
 {
     uint64(*adjacency_matrix)[N + 1] = a_matrix;
 
-    cost *costs = calloc(N + 1, sizeof(cost));
+    uint64 *costs = calloc(N + 1, sizeof(uint64));
     int *parents = calloc(N + 1, sizeof(int));
     char *processed = calloc(N + 1, sizeof(char));
     if ((costs == NULL) || (parents == NULL) || (processed == NULL))
@@ -128,22 +135,22 @@ dijkstra_protocol *dijkstra_algorithm(const unsigned S, void *a_matrix, const un
         fprintf(stderr, "Memory allocation failed %d\n", __LINE__);
         return NULL;
     }
+    
+    init_costs(costs, N);
+    costs[S] = 0;
 
-    costs[S].n_inf = 1;
     int node = find_lovest_cost_node(costs, processed, N);
     while (node)
     {
-        uint64 cost_node = costs[node].value;
+        uint64 cost_node = costs[node];
         for (int i = 1; i <= N; ++i)
         {
             if (adjacency_matrix[node][i])
             {
                 uint64 new_cost = cost_node + adjacency_matrix[node][i];
-                if ((costs[i].n_inf == 0) || (new_cost < costs[i].value))
+                if (new_cost < costs[i])
                 {
-                    costs[i].value = new_cost;
-                    costs[i].n_inf = 1;
-
+                    costs[i]= new_cost;
                     parents[i] = node;
                 }
             }
@@ -195,38 +202,38 @@ void print_dijkstra(dijkstra_protocol *d_protocol, const int N, const int S, con
 {
     for (int i = 1; i <= N; ++i)
     {
-        if (d_protocol->costs[i].n_inf == 0)
+        if (d_protocol->costs[i] == UINT64_MAX)
         {
             printf("oo ");
         }
-        else if (d_protocol->costs[i].value > INT_MAX)
+        else if (d_protocol->costs[i] > INT_MAX)
         {
             printf("INT_MAX+ ");
         }
         else
         {
-            printf("%llu ", d_protocol->costs[i].value);
+            printf("%llu ", d_protocol->costs[i]);
         }
     }
 
     printf("\n");
 
-    if (d_protocol->costs[F].n_inf == 0)
+    if (d_protocol->costs[F] == UINT64_MAX)
     {
         printf("no path");
     }
-    else if (d_protocol->costs[F].value > INT_MAX)
+    else if (d_protocol->costs[F] > INT_MAX)
     {
         int c = 0;
         int i = F;
-        if (d_protocol->costs[i].value > INT_MAX)
+        if (d_protocol->costs[i] > INT_MAX)
         {
             c++;
         }
         while (i != S)
         {
             i = d_protocol->parents[i];
-            if (d_protocol->costs[i].value > INT_MAX)
+            if (d_protocol->costs[i] > INT_MAX)
             {
                 c++;
             }
