@@ -3,7 +3,6 @@
 #include <limits.h>
 #include <stdint.h>
 
-
 #define DEBUG1
 
 typedef struct list
@@ -12,9 +11,9 @@ typedef struct list
     struct list *next;
 } list;
 
-void push(list** l, int value)
+void push(list **l, int value)
 {
-    list* new = malloc(sizeof(list));
+    list *new = malloc(sizeof(list));
     new->value = value;
     new->next = *l;
     *l = new;
@@ -124,7 +123,7 @@ int find_lovest_cost_node(uint64_t *costs, char *processed, const int N)
     return lovest_cost_node;
 }
 
-void init_costs(uint64_t* costs, const int N)
+void init_costs(uint64_t *costs, const int N)
 {
     for (int i = 1; i <= N; ++i)
     {
@@ -147,7 +146,7 @@ dijkstra_protocol *dijkstra_algorithm(const unsigned S, void *a_matrix, const un
         fprintf(stderr, "Memory allocation failed %d\n", __LINE__);
         return NULL;
     }
-    
+
     init_costs(costs, N);
     costs[S] = 0;
 
@@ -162,8 +161,8 @@ dijkstra_protocol *dijkstra_algorithm(const unsigned S, void *a_matrix, const un
                 uint64_t new_cost = cost_node + adjacency_matrix[node][i];
                 if (new_cost <= costs[i])
                 {
-                    costs[i]= new_cost;
-                    //parents[i] = node;
+                    costs[i] = new_cost;
+                    // parents[i] = node;
                     push(&parents[i], node);
                 }
             }
@@ -190,11 +189,11 @@ dijkstra_protocol *dijkstra_algorithm(const unsigned S, void *a_matrix, const un
     printf("parents:   ");
     for (int i = 1; i <= N; ++i)
     {
-        if(parents[i]) 
+        if (parents[i])
         {
-            //printf("%d ", parents[i]->value);
+            // printf("%d ", parents[i]->value);
             list *tmp = parents[i];
-            while (tmp != NULL) 
+            while (tmp != NULL)
             {
                 printf("|%d|", tmp->value);
                 tmp = tmp->next;
@@ -224,17 +223,17 @@ dijkstra_protocol *dijkstra_algorithm(const unsigned S, void *a_matrix, const un
     return d_protocol;
 }
 
-int check_num_paths(list **parents, int f) 
+int check_num_paths(list **parents, int f)
 {
     if (parents[f] == NULL)
     {
         return 1;
     }
-    else 
+    else
     {
         int num_path = 0;
         list *tmp = parents[f];
-        while (tmp != NULL) 
+        while (tmp != NULL)
         {
             num_path += check_num_paths(parents, tmp->value);
             tmp = tmp->next;
@@ -271,21 +270,6 @@ void print_dijkstra(dijkstra_protocol *d_protocol, const int N, const int S, con
     {
         int num_paths = check_num_paths(d_protocol->parents, F);
 
-        /*int c = 0;
-        int i = F;
-        if (d_protocol->costs[i] > INT_MAX)
-        {
-            c++;
-        }
-        while (i != S)
-        {
-            i = d_protocol->parents[i];
-            if (d_protocol->costs[i] > INT_MAX)
-            {
-                c++;
-            }
-        }*/
-
         if (num_paths > 1)
         {
             printf("overflow");
@@ -311,9 +295,18 @@ void print_dijkstra(dijkstra_protocol *d_protocol, const int N, const int S, con
             printf("%d ", i);
         }
     }
-
-    free(d_protocol->parents);
     free(d_protocol->costs);
+    for (int i = 1; i <= N; ++i)
+    {
+        list *tmp = d_protocol->parents[i];
+        while (tmp != NULL)
+        {
+            list *next = tmp->next;
+            free(tmp);
+            tmp = next;
+        }
+    }
+    free(d_protocol->parents);
     free(d_protocol);
 }
 
