@@ -88,7 +88,7 @@ void *input_graph(const unsigned N, const unsigned S, const unsigned F, const un
 
     unsigned(*adjacency_matrix)[N + 1] = calloc((N + 1) * (N + 1), sizeof(unsigned));
 
-    for (int i = 0; i < M; ++i)
+    for (unsigned i = 0; i < M; ++i)
     {
         unsigned s_edge, f_edge;
         unsigned len_edge;
@@ -123,9 +123,9 @@ int find_lovest_cost_node(uint64_t *costs, char *processed, const int N)
     return lovest_cost_node;
 }
 
-void init_costs(uint64_t *costs, const int N)
+void init_costs(uint64_t *costs, const unsigned N)
 {
-    for (int i = 1; i <= N; ++i)
+    for (unsigned i = 1; i <= N; ++i)
     {
         costs[i] = UINT64_MAX;
     }
@@ -154,7 +154,7 @@ dijkstra_protocol *dijkstra_algorithm(const unsigned S, void *a_matrix, const un
     while (node)
     {
         uint64_t cost_node = costs[node];
-        for (int i = 1; i <= N; ++i)
+        for (unsigned i = 1; i <= N; ++i)
         {
             if (adjacency_matrix[node][i])
             {
