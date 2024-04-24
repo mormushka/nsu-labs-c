@@ -17,22 +17,18 @@ void destroy_memory(t_memory *memory);
 typedef struct rbt
 {
     int value;
-    char height;
     char color;
-    struct rbt *parent;
     struct rbt *left;
     struct rbt *right;
 } rbt;
 
 rbt *allocate_node(t_memory *memory);
-rbt *create_leaf(int value, t_memory *memory, rbt *parent);
-char height(rbt *t);
+rbt *create_leaf(int value, t_memory *memory);
 int balance_factor(rbt *t);
-void fix_height(rbt *t);
 rbt *rotate_right(rbt *t);
 rbt *rotate_left(rbt *t);
 rbt *balance(rbt *t);
-void insert(int value, rbt *parent, rbt **t, t_memory *memory);
+void insert(int value, rbt **t, t_memory *memory);
 rbt *input_tree(int tree_size, t_memory *memory);
 
 t_memory create_memory(int count, int size)
@@ -61,22 +57,16 @@ rbt *allocate_node(t_memory *memory)
     return tree;
 }
 
-rbt *create_leaf(int value, t_memory *memory, rbt *parent)
+rbt *create_leaf(int value, t_memory *memory)
 {
     rbt *new = allocate_node(memory);
 
     new->value = value;
-    new->height = 1;
+    new->color = RED;
     new->left = NULL;
     new->right = NULL;
-    new->parent = parent;
 
     return new;
-}
-
-char height(rbt *t)
-{
-    return t ? t->height : 0;
 }
 
 char color(rbt *t)
@@ -84,27 +74,11 @@ char color(rbt *t)
     return t ? t->color : BLACK;
 }
 
-int balance_factor(rbt *t) ///
-{
-    return height(t->right) - height(t->left);
-}
-
-void fix_height(rbt *t)
-{
-    char hl = height(t->left);
-    char hr = height(t->right);
-    t->height = (hl > hr ? hl : hr) + 1;
-}
-
 void swap_color(rbt *t)
 {
     t->color = RED;
     t->left->color = BLACK;
     t->right->color = BLACK;
-
-    fix_height(t->right);
-    fix_height(t->left);
-    fix_height(t);
 }
 
 rbt *rotate_left(rbt *t)
@@ -116,11 +90,6 @@ rbt *rotate_left(rbt *t)
     buffer->color = t->color;
     t->color = RED;
 
-    buffer->parent = t->parent;
-    t->parent = buffer;
-
-    fix_height(t);
-    fix_height(buffer);
     return buffer;
 }
 
@@ -133,32 +102,16 @@ rbt *rotate_right(rbt *t)
     buffer->color = t->color;
     t->color = RED;
 
-    buffer->parent = t->parent;
-    t->parent = buffer;
-
     if ((color(buffer->left) == RED) && (color(buffer->right) == RED))
     {
         swap_color(buffer);
     }
 
-    fix_height(t);
-    fix_height(buffer);
     return buffer;
 }
 
 rbt *balance(rbt *t)
 {
-    if (!t->parent) 
-    {
-        t->color = BLACK;
-    }
-    else 
-    {
-        t->color = RED;
-    }
-
-    fix_height(t);
-
     if ((color(t->right) == RED) && (color(t->left) == BLACK))
     {
         return rotate_left(t);
@@ -175,43 +128,19 @@ rbt *balance(rbt *t)
     return t;
 }
 
-/*rbt *balance1(rbt *t)
-{
-    fix_height(t);
-
-    if (balance_factor(t) == 2)
-    {
-        if (balance_factor(t->right) < 0)
-        {
-            t->right = rotate_right(t->right);
-        }
-        return rotate_left(t);
-    }
-    if (balance_factor(t) == -2)
-    {
-        if (balance_factor(t->left) > 0)
-        {
-            t->left = rotate_left(t->left);
-        }
-        return rotate_right(t);
-    }
-
-    return t;
-}*/
-
-void insert(int value, rbt *parent, rbt **t, t_memory *memory)
+void insert(int value, rbt **t, t_memory *memory)
 {
     if (!(*t))
     {
-        *t = create_leaf(value, memory, parent);
+        *t = create_leaf(value, memory);
     }
     else if (value < (*t)->value)
     {
-        insert(value, *t, &(*t)->left, memory);
+        insert(value, &(*t)->left, memory);
     }
     else
     {
-        insert(value, *t, &(*t)->right, memory);
+        insert(value, &(*t)->right, memory);
     }
 
     *t = balance(*t);
@@ -229,10 +158,23 @@ rbt *input_tree(int tree_size, t_memory *memory)
             fprintf(stderr, "Input error %d\n", __LINE__);
         }
 
-        insert(value, NULL, &tree, memory);
+        insert(value, &tree, memory);
     }
-
+    if (tree)
+    {
+        tree->color = BLACK;
+    }
     return tree;
+}
+
+int height(rbt *t) 
+{
+    if (!t)
+    {
+        return 1;
+    }
+    
+    return (t->color == BLACK) + height(t->right);
 }
 
 int main()
@@ -258,19 +200,7 @@ int main()
     }
     else
     {
-        char h = height(tree);
-        if (h == 1) 
-        {
-            printf("2");
-        }
-        else if (h == 6) 
-        {
-            printf("4");
-        }
-        else
-        {
-            printf("%d", h);
-        }
+        printf("%d", height(tree));
     }
 
     destroy_memory(&memory);
