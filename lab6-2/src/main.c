@@ -143,7 +143,7 @@ b_tree *input_tree(int t, int tree_size)
     for (int i = 0; i < tree_size; ++i)
     {
         int k = 0;
-        if (scanf("%d", &k) <= 0)
+        if (scanf("%d", &k) < 1)
         {
             fprintf(stderr, "Input error %d\n", __LINE__);
         }
@@ -175,7 +175,7 @@ void destroy_b_tree(b_tree *bt)
     {
         return;
     }
-    for (int i = 0; i < bt->n + 1; ++i)
+    for (int i = 0; i <= bt->n; ++i)
     {
         destroy_b_tree(bt->child[i]);
     }
