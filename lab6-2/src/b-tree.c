@@ -24,21 +24,6 @@ int get_child_idx(const b_tree *bt, int k)
     return left;
 }
 
-void move_tail(b_tree *dest, int i, b_tree *src, int j)
-{
-    int t = dest->n - i;
-    memmove(dest->key + i, src->key + j, t * sizeof(int));
-    memmove(dest->child + i, src->child + j, (t + 1) * sizeof(b_tree *));
-}
-
-void add_key(b_tree *bt, int k)
-{
-    int c = get_child_idx(bt, k);
-    bt->n += 1;
-    move_tail(bt, c + 1, bt, c);
-    bt->key[c] = k;
-}
-
 b_tree *create(int t)
 {
     b_tree *tmp = calloc(1, sizeof(b_tree));
@@ -60,6 +45,23 @@ b_tree *create(int t)
     return tmp;
 }
 
+bool is_leaf(b_tree *bt)
+{
+    return bt->child[0] == NULL;
+}
+
+bool is_full(b_tree *bt, int t)
+{
+    return bt->n == 2 * t - 1;
+}
+
+void move_tail(b_tree *dest, int i, b_tree *src, int j)
+{
+    int t = dest->n - i;
+    memmove(dest->key + i, src->key + j, t * sizeof(int));
+    memmove(dest->child + i, src->child + j, (t + 1) * sizeof(b_tree *));
+}
+
 void split(int c, b_tree *p, int t)
 {
     b_tree *fc = p->child[c];
@@ -78,14 +80,12 @@ void split(int c, b_tree *p, int t)
     p->child[c + 1] = nc;
 }
 
-bool is_leaf(b_tree *bt)
+void add_key(b_tree *bt, int k)
 {
-    return bt->child[0] == NULL;
-}
-
-bool is_full(b_tree *bt, int t)
-{
-    return bt->n == 2 * t - 1;
+    int c = get_child_idx(bt, k);
+    bt->n += 1;
+    move_tail(bt, c + 1, bt, c);
+    bt->key[c] = k;
 }
 
 void insert_non_full(b_tree *bt, int t, int k)
