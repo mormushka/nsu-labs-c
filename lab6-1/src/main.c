@@ -25,10 +25,6 @@ typedef struct rbt
 
 rbt *allocate_node(t_memory *memory);
 rbt *create_leaf(int value, t_memory *memory);
-int balance_factor(rbt *t);
-rbt *rotate_right(rbt *t);
-rbt *rotate_left(rbt *t);
-rbt *balance(rbt *t);
 void insert(int value, rbt **t, t_memory *memory);
 rbt *input_tree(int tree_size, t_memory *memory);
 
@@ -76,40 +72,153 @@ char color(rbt *t)
     return t ? t->color : BLACK;
 }
 
-rbt *rotate_right(rbt *t)
+void rotate_left(rbt **tree, rbt *x)
 {
-    rbt *buffer = t->left;
-    t->left = buffer->right;
-    buffer->right = t;
-    return buffer;
+    rbt *buffer = x->right;
+    x->right = buffer->left;
+    if (buffer->left != NULL)
+    {
+        buffer->left->parent = x;
+    }
+
+    buffer->parent = x->parent;
+    if (x->parent == NULL)
+    {
+        *tree = buffer;
+    }
+    else if (x == x->parent->left)
+    {
+        x->parent->left = buffer;
+    }
+    else
+    {
+        x->parent->right = buffer;
+    }
+
+    buffer->left = x;
+    x->parent = buffer;
 }
 
-rbt *rotate_left(rbt *t)
+void rotate_right(rbt **tree, rbt *x)
 {
-    rbt *buffer = t->right;
-    t->right = buffer->left;
-    buffer->left = t;
-    return buffer;
+    rbt *buffer = x->left;
+    x->left = buffer->right;
+    if (buffer->right != NULL)
+    {
+        buffer->right->parent = x;
+    }
+
+    buffer->parent = x->parent;
+    if (x->parent == NULL)
+    {
+        *tree = buffer;
+    }
+    else if (x == x->parent->right)
+    {
+        x->parent->right = buffer;
+    }
+    else
+    {
+        x->parent->left = buffer;
+    }
+    
+    buffer->right = x;
+    x->parent = buffer;
+}
+
+void balance(rbt **tree, rbt *node)
+{
+    while (node != *tree && node->parent->color == RED)
+    {
+        if (node->parent == node->parent->parent->left)
+        {
+            rbt *uncle = node->parent->parent->right;
+
+            if (color(uncle) == RED)
+            {
+                node->parent->color = BLACK;
+                uncle->color = BLACK;
+                node->parent->parent->color = RED;
+                node = node->parent->parent;
+            }
+            else
+            {
+                if (node == node->parent->right)
+                {
+                    node = node->parent;
+                    rotate_left(tree, node);
+                }
+
+                node->parent->color = BLACK;
+                node->parent->parent->color = RED;
+                rotate_right(tree, node->parent->parent);
+            }
+        }
+        else
+        {
+            rbt *uncle = node->parent->parent->left;
+
+            if (color(uncle) == RED)
+            {
+                node->parent->color = BLACK;
+                uncle->color = BLACK;
+                node->parent->parent->color = RED;
+                node = node->parent->parent;
+            }
+            else
+            {
+                if (node == node->parent->left)
+                {
+                    node = node->parent;
+                    rotate_right(tree, node);
+                }
+
+                node->parent->color = BLACK;
+                node->parent->parent->color = RED;
+                rotate_left(tree, node->parent->parent);
+            }
+        }
+    }
+
+    (*tree)->color = BLACK;
 }
 
 void insert(int value, rbt **tree, t_memory *memory)
 {
-    rbt* new_node = create_leaf(value, memory);
-    rbt *current_node = &tree;
+    rbt *new_node = create_leaf(value, memory);
+    rbt *current_node = *tree;
     rbt *current_parent = NULL;
     while (current_node != NULL)
     {
         current_parent = current_node;
         if (value < current_node->value)
         {
-            current_parent = current_node->left;
+            current_node = current_node->left;
         }
         else
         {
-            current_parent = current_node->right;
+            current_node = current_node->right;
         }
     }
 
+    new_node->parent = current_parent;
+
+    if (current_parent == NULL)
+    {
+        new_node->color = BLACK;
+        *tree = new_node;
+        return;
+    }
+    else if (value < current_parent->value)
+    {
+        current_parent->left = new_node;
+    }
+    else
+    {
+        current_parent->right = new_node;
+    }
+
+    balance(tree, new_node);
 }
 
 rbt *input_tree(int tree_size, t_memory *memory)
@@ -142,6 +251,8 @@ int height(rbt *t)
 
 int main()
 {
+    //freopen("../in.txt", "r", stdin);
+
     int count = 0;
     if (scanf("%d", &count) <= 0)
     {
