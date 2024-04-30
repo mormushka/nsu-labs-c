@@ -1,8 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
-#define BLACK 0
-#define RED 1
+#define DEBUG1
 
 typedef struct t_memory
 {
@@ -11,22 +11,20 @@ typedef struct t_memory
     void *buffer;
 } t_memory;
 
-t_memory create_memory(int count, int size);
-void destroy_memory(t_memory *memory);
+enum colors
+{
+    BLACK,
+    RED
+};
 
 typedef struct rbt
 {
-    int value;
-    char color;
-    struct rbt *parent;
+    int data;
+    enum colors color;
     struct rbt *left;
     struct rbt *right;
-} rbt;
 
-rbt *allocate_node(t_memory *memory);
-rbt *create_leaf(int value, t_memory *memory);
-void insert(int value, rbt **t, t_memory *memory);
-rbt *input_tree(int tree_size, t_memory *memory);
+} rbt;
 
 t_memory create_memory(int count, int size)
 {
@@ -49,22 +47,59 @@ rbt *allocate_node(t_memory *memory)
         return NULL;
     }
 
-    rbt *tree = (rbt *)((char *)memory->buffer + memory->index * sizeof(rbt));
+    rbt *root = (rbt *)((char *)memory->buffer + memory->index * sizeof(rbt));
     ++memory->index;
-    return tree;
+    return root;
 }
 
-rbt *create_leaf(int value, t_memory *memory)
+rbt *create_leaf(int data, t_memory *memory)
 {
     rbt *new = allocate_node(memory);
 
-    new->value = value;
+    new->data = data;
     new->color = RED;
-    new->parent = NULL;
     new->left = NULL;
     new->right = NULL;
 
     return new;
+}
+
+void rotate_left(rbt **root, rbt *x, rbt **family, int len)
+{
+    rbt *y = x->right;
+    x->right = y->left;
+    y->left = x;
+    if (len == 0)
+    {
+        *root = y;
+    }
+    else if (y->data >= family[len - 1]->data)
+    {
+        family[len - 1]->right = y;
+    }
+    else
+    {
+        family[len - 1]->left = y;
+    }
+}
+
+void rotate_right(rbt **root, rbt *x, rbt **family, int len)
+{
+    rbt *y = x->left;
+    x->left = y->right;
+    y->right = x;
+    if (len == 0)
+    {
+        *root = y;
+    }
+    else if (y->data < family[len - 1]->data)
+    {
+        family[len - 1]->left = y;
+    }
+    else
+    {
+        family[len - 1]->right = y;
+    }
 }
 
 char color(rbt *t)
@@ -72,158 +107,120 @@ char color(rbt *t)
     return t ? t->color : BLACK;
 }
 
-void rotate_left(rbt **tree, rbt *x)
+void balance(rbt **root, rbt *node, rbt **family, int len)
 {
-    rbt *buffer = x->right;
-    x->right = buffer->left;
-    if (buffer->left != NULL)
+    rbt *parent = NULL;
+    rbt *grand_parent = NULL;
+    if ((len != 0) && (family[len - 1]->color == RED))
     {
-        buffer->left->parent = x;
-    }
-
-    buffer->parent = x->parent;
-    if (x->parent == NULL)
-    {
-        *tree = buffer;
-    }
-    else if (x == x->parent->left)
-    {
-        x->parent->left = buffer;
-    }
-    else
-    {
-        x->parent->right = buffer;
-    }
-
-    buffer->left = x;
-    x->parent = buffer;
-}
-
-void rotate_right(rbt **tree, rbt *x)
-{
-    rbt *buffer = x->left;
-    x->left = buffer->right;
-    if (buffer->right != NULL)
-    {
-        buffer->right->parent = x;
-    }
-
-    buffer->parent = x->parent;
-    if (x->parent == NULL)
-    {
-        *tree = buffer;
-    }
-    else if (x == x->parent->right)
-    {
-        x->parent->right = buffer;
-    }
-    else
-    {
-        x->parent->left = buffer;
-    }
-    
-    buffer->right = x;
-    x->parent = buffer;
-}
-
-void balance(rbt **tree, rbt *node)
-{
-    while (node != *tree && node->parent->color == RED)
-    {
-        if (node->parent == node->parent->parent->left)
+        rbt *parent = family[len - 1];
+        grand_parent = family[len - 2];
+        if (parent == grand_parent->left)
         {
-            rbt *uncle = node->parent->parent->right;
+            rbt *uncle = grand_parent->right;
 
             if (color(uncle) == RED)
             {
-                node->parent->color = BLACK;
+                parent->color = BLACK;
                 uncle->color = BLACK;
-                node->parent->parent->color = RED;
-                node = node->parent->parent;
+                grand_parent->color = RED;
+                balance(root, grand_parent, family, len - 2);
             }
             else
             {
-                if (node == node->parent->right)
+                if (node == parent->right)
                 {
-                    node = node->parent;
-                    rotate_left(tree, node);
+                    rotate_left(root, parent, family, len - 1);
+                    family[len - 1] = node;
                 }
-
-                node->parent->color = BLACK;
-                node->parent->parent->color = RED;
-                rotate_right(tree, node->parent->parent);
+                family[len - 1]->color = BLACK;
+                family[len - 2]->color = RED;
+                rotate_right(root, grand_parent, family, len - 2);
             }
         }
         else
         {
-            rbt *uncle = node->parent->parent->left;
+            rbt *uncle = grand_parent->left;
 
             if (color(uncle) == RED)
             {
-                node->parent->color = BLACK;
+                parent->color = BLACK;
                 uncle->color = BLACK;
-                node->parent->parent->color = RED;
-                node = node->parent->parent;
+                grand_parent->color = RED;
+                balance(root, grand_parent, family, len - 2);
             }
             else
             {
-                if (node == node->parent->left)
+                if (node == parent->left)
                 {
-                    node = node->parent;
-                    rotate_right(tree, node);
+                    rotate_right(root, parent, family, len - 1);
+                    family[len - 1] = node;
                 }
-
-                node->parent->color = BLACK;
-                node->parent->parent->color = RED;
-                rotate_left(tree, node->parent->parent);
+                family[len - 1]->color = BLACK;
+                family[len - 2]->color = RED;
+                rotate_left(root, grand_parent, family, len - 2);
             }
         }
     }
-
-    (*tree)->color = BLACK;
+    (*root)->color = BLACK;
 }
 
-void insert(int value, rbt **tree, t_memory *memory)
+void insert(int data, rbt **root, rbt **family, t_memory *memory)
 {
-    rbt *new_node = create_leaf(value, memory);
-    rbt *current_node = *tree;
-    rbt *current_parent = NULL;
-    while (current_node != NULL)
+    rbt *newNode = create_leaf(data, memory);
+    rbt *new_node = *root;
+
+    int len = 0;
+    while (new_node != NULL)
     {
-        current_parent = current_node;
-        if (value < current_node->value)
+        family[len] = new_node;
+        len++;
+        if (newNode->data < new_node->data)
         {
-            current_node = current_node->left;
+            new_node = new_node->left;
         }
         else
         {
-            current_node = current_node->right;
+            new_node = new_node->right;
         }
     }
 
-    new_node->parent = current_parent;
-
-    if (current_parent == NULL)
+    if (len == 0)
     {
-        new_node->color = BLACK;
-        *tree = new_node;
-        return;
+        *root = newNode;
     }
-    else if (value < current_parent->value)
+    else if (newNode->data < family[len - 1]->data)
     {
-        current_parent->left = new_node;
+        family[len - 1]->left = newNode;
     }
     else
     {
-        current_parent->right = new_node;
+        family[len - 1]->right = newNode;
     }
 
-    balance(tree, new_node);
+    balance(root, newNode, family, len);
+}
+
+int pow_m(int num, int d)
+{
+    return d == 0 ? 1 : num * pow_m(num, d - 1);
+}
+
+int log_2(int n)
+{
+    for (int i = 0; i < 31; i++)
+    {
+        if (n < pow_m(2, i))
+        {
+            return i;
+        }
+    }
 }
 
 rbt *input_tree(int tree_size, t_memory *memory)
 {
-    rbt *tree = NULL;
+    rbt *root = NULL;
+    rbt *family[log_2(tree_size) * 2];
 
     for (int i = 0; i < tree_size; ++i)
     {
@@ -233,28 +230,25 @@ rbt *input_tree(int tree_size, t_memory *memory)
             fprintf(stderr, "Input error %d\n", __LINE__);
         }
 
-        insert(value, &tree, memory);
+        insert(value, &root, family, memory);
     }
 
-    return tree;
+    return root;
 }
 
-int height(rbt *t)
+int height(rbt *t, int h)
 {
-    if (!t)
-    {
-        return 1;
-    }
-
-    return (t->color == BLACK) + height(t->right);
+    return t ? height(t->right, (t->color == BLACK) + h) : h;
 }
 
 int main()
 {
-    //freopen("../in.txt", "r", stdin);
+#ifdef DEBUG
+    freopen("../in.txt", "r", stdin);
+#endif
 
     int count = 0;
-    if (scanf("%d", &count) <= 0)
+    if (scanf("%d", &count) < 1)
     {
         fprintf(stderr, "Input error %d\n", __LINE__);
         return EXIT_FAILURE;
@@ -267,15 +261,8 @@ int main()
         return EXIT_FAILURE;
     }
 
-    rbt *tree = input_tree(count, &memory);
-    if (count == 0)
-    {
-        printf("0");
-    }
-    else
-    {
-        printf("%d", height(tree));
-    }
+    rbt *root = input_tree(count, &memory);
+    printf("%d", height(root, root != NULL));
 
     destroy_memory(&memory);
 
