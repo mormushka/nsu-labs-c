@@ -1,76 +1,75 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-size_t max(size_t a, size_t b)
-{
-    return (a > b) ? a : b;
-}
-
 void print_items(const size_t n, const size_t w, size_t *weight, size_t *cost, void *tc_void)
 {
-    size_t (*tc)[w + 1] = tc_void;
-    size_t *r_weight = calloc(n + 1, sizeof(size_t));
-    if (r_weight == NULL)
-    {
-        fprintf(stderr, "Memory allocation failed %d\n", __LINE__);
-        return;
-    }
-    size_t *r_cost = calloc(n + 1, sizeof(size_t));
-    if (r_cost == NULL)
-    {
-        free(r_weight);
-        fprintf(stderr, "Memory allocation failed %d\n", __LINE__);
-        return;
-    }
-
-    printf("%zu\n", tc[n][w]);
+    size_t(*tc)[w + 1][2] = tc_void;
+    printf("%zu\n", tc[n][w][0]);
 
     size_t j = w;
+    int shopping_list[n + 1];
     for (size_t i = n; i > 0; --i)
     {
-        if (tc[i][j] != tc[i - 1][j])
-        {   
-            r_weight[i] = weight[i];
-            r_cost[i] = cost[i];
+        if ((tc[i][j][0] != tc[i - 1][j][0]) || (tc[i][j][1] != tc[i - 1][j][1]))
+        {
+            shopping_list[i] = 1;
             j -= weight[i];
+        }
+        else
+        {
+            shopping_list[i] = 0;
         }
     }
 
     for (size_t i = 1; i <= n; ++i)
     {
-        if (r_weight[i] != 0)
+        if (shopping_list[i] == 1)
         {
-            printf("%zu %zu\n", r_weight[i], r_cost[i]);
+            printf("%zu %zu\n", weight[i], cost[i]);
         }
     }
-
-    free(r_weight);
-    free(r_cost);
 }
 
 void knapsack(const size_t n, const size_t w, size_t *weight, size_t *cost)
 {
-    size_t (*tc)[w + 1] = calloc( (n + 1) * (w + 1), sizeof(size_t));
+    size_t(*tc)[w + 1][2] = calloc((n + 1) * (w + 1) * 2, sizeof(size_t));
     if (tc == NULL)
     {
         fprintf(stderr, "Memory allocation failed %d\n", __LINE__);
         return;
     }
 
-
     for (size_t i = 1; i <= n; ++i)
     {
         for (size_t j = 1; j <= w; ++j)
         {
+            size_t previous_maximum = tc[i - 1][j][0];
+            size_t w_previous_maximum = tc[i - 1][j][1];
+
+            tc[i][j][0] = previous_maximum;
+            tc[i][j][1] = w_previous_maximum;
+
             if (weight[i] <= j)
             {
-                size_t previous_maximum = tc[i - 1][j];
-                size_t cost_with_free_space = cost[i] + tc[i - 1][j - weight[i]];
-                tc[i][j] =  max(previous_maximum, cost_with_free_space);
-            }
-            else
-            {
-                tc[i][j] = tc[i - 1][j];
+                size_t cost_with_free_space = cost[i] + tc[i - 1][j - weight[i]][0];
+                size_t weight_with_free_space = weight[i] + tc[i - 1][j - weight[i]][1];
+
+                if (cost_with_free_space > previous_maximum)
+                {
+                    tc[i][j][0] = cost_with_free_space;
+                    tc[i][j][1] = weight_with_free_space;
+                }
+                if (cost_with_free_space == previous_maximum)
+                {
+                    if (weight_with_free_space > w_previous_maximum)
+                    {
+                        tc[i][j][1] = w_previous_maximum;
+                    }
+                    else
+                    {
+                        tc[i][j][1] = weight_with_free_space;
+                    }
+                }
             }
         }
     }
@@ -78,7 +77,6 @@ void knapsack(const size_t n, const size_t w, size_t *weight, size_t *cost)
     print_items(n, w, weight, cost, tc);
     free(tc);
 }
-
 
 int main()
 {
