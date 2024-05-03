@@ -55,36 +55,38 @@ bool is_full(b_tree *bt, int t)
     return bt->n == 2 * t - 1;
 }
 
+/*копирование хвоста из src + j в dest + i*/
 void move_tail(b_tree *dest, int i, b_tree *src, int j)
 {
-    int t = dest->n - i;
+    int t = dest->n - i; /*длинна хвоста*/
     memmove(dest->key + i, src->key + j, t * sizeof(int));
     memmove(dest->child + i, src->child + j, (t + 1) * sizeof(b_tree *));
 }
 
+/*разбиение c-го ребенка p*/
 void split(int c, b_tree *p, int t)
 {
-    b_tree *fc = p->child[c];
-    b_tree *nc = create(t);
+    b_tree *right_c = p->child[c]; /*правая отделившеяся часть*/
+    b_tree *left_c = create(t); /*левая отделившеяся часть*/
 
-    nc->n = t - 1;
-    fc->n = t - 1;
+    right_c->n = t - 1; /*половина от макс количества ключей*/
+    left_c->n = t - 1; /*половина от макс количества ключей*/
 
-    move_tail(nc, 0, fc, t);
+    move_tail(left_c, 0, right_c, t); /*левую половину из правого в левого */
 
-    p->n += 1;
+    p->n += 1; /*+1 так как из ребенка прийдет средний элемент*/
 
-    move_tail(p, c + 1, p, c);
-
-    p->key[c] = fc->key[t - 1];
-    p->child[c + 1] = nc;
+    move_tail(p, c + 1, p, c); /*сдвиг элементов p на 1, чтобы освободить место для среднего элемената из c ребенка*/
+ 
+    p->key[c] = right_c->key[t - 1]; /*middle*/
+    p->child[c + 1] = left_c; /*с + 1 ребенок равен правой отделившейся части*/
 }
 
 void add_key(b_tree *bt, int k)
 {
     int c = get_child_idx(bt, k);
     bt->n += 1;
-    move_tail(bt, c + 1, bt, c);
+    move_tail(bt, c + 1, bt, c); /* освобождаем место под ключ*/
     bt->key[c] = k;
 }
 
@@ -96,7 +98,7 @@ void insert_non_full(b_tree *bt, int t, int k)
     }
     else
     {
-        int child_idx = get_child_idx(bt, k);
+        int child_idx = get_child_idx(bt, k); /*в какого ребенка добавить?*/
         if (is_full(bt->child[child_idx], t))
         {
             split(child_idx, bt, t);
@@ -115,7 +117,7 @@ void insert(b_tree **bt, int t, int k)
     }
     else
     {
-        if (is_full(*bt, t))
+        if (is_full(*bt, t)) /*только для корня*/
         {
             b_tree *new_root = create(t);
             new_root->child[0] = *bt;

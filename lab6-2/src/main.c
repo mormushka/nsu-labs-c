@@ -4,7 +4,7 @@
 
 int main()
 {
-    int t = 2;
+    int t = 1;
     int count = 0;
     if (scanf("%d %d", &t, &count) < 2)
     {
