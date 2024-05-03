@@ -3,6 +3,69 @@
 #include <string.h>
 #include <stdbool.h>
 
+#if 1
+#define MAX_BUFFER_SIZE 1024
+int n_main();
+int main()
+{
+    // Открываем поток для выполнения команды и чтения вывода
+    FILE *fp = popen("file ../in.txt", "r");
+    if (fp == NULL)
+    {
+        perror("Ошибка выполнения команды");
+        return EXIT_FAILURE;
+    }
+
+    char buffer[MAX_BUFFER_SIZE];
+    // Считываем вывод команды
+    while (fgets(buffer, sizeof(buffer), fp) != NULL)
+    {
+        // Проверяем, содержит ли вывод информацию о кодировке
+        if (strstr(buffer, "ASCII text") != NULL)
+        {
+            fprintf(stderr, "ASCII file\n");
+            break;
+        }
+        else
+        {
+            fprintf(stderr, "NOOOO ASCII FILE!!!!\n");
+            break;
+        }
+    }
+    pclose(fp);
+
+    int result = n_main();
+    return result;
+}
+#define main n_main
+#endif
+
+#if 0
+int __allocs = 0;
+static void* my_malloc(size_t size) {
+    __allocs++;
+    return malloc(size);
+}
+static void* my_calloc(size_t count, size_t size) {
+    __allocs++;
+    return calloc(count, size);
+}
+static void my_free(void *ptr) {
+    __allocs--;
+    free(ptr);
+}
+int n_main();   
+int main(){
+    int result = n_main();
+    fprintf(stderr, "\nAllocation balance %d %s\n", __allocs, __allocs ? "- Memory leaks occur!!!" : "is ok");
+    return result;
+}
+#define malloc my_malloc
+#define calloc my_calloc
+#define free my_free
+#define main n_main
+#endif
+
 #define MY_TEST1
 #define DEBUG1
 
@@ -116,7 +179,7 @@ void print_childrens_h(char *pr, int len_pr, trie *t)
 
     print_childrens_h(pr, len_pr, t->next);
 
-    strcpy(pr + len_pr, t->key);
+    strncpy(pr + len_pr, t->key, t->len);
     len_pr += t->len;
 
     if (t->is_key)
@@ -167,13 +230,14 @@ void print_childrens(trie *t, char *str)
 
     if (!t)
     {
-        printf("None\n");
+        printf("None");
+        free(pr);
         return;
     }
 
     if (n < t->len)
     {
-        strcpy(pr + len_pr, t->key + n);
+        strncpy(pr + len_pr, t->key + n, t->len - n);
         len_pr += t->len - n;
     }
 
@@ -183,6 +247,7 @@ void print_childrens(trie *t, char *str)
     }
 
     print_childrens_h(pr, len_pr, t->link);
+    free(pr);
 }
 
 size_t check_num_nods_h(trie *t)
@@ -217,7 +282,7 @@ void destroy_trie(trie *t)
 int main()
 {
 #ifndef MY_TEST
-#ifdef DEBUG
+#if 0
     freopen("../in.txt", "r", stdin);
 #endif
 
@@ -237,6 +302,7 @@ int main()
     }
 
     print_childrens(tree, f);
+    free(f);
     printf("\n");
 
     printf("%zu\n", check_num_nods(tree));
