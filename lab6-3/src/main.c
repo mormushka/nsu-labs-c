@@ -3,7 +3,7 @@
 #include <string.h>
 #include <stdbool.h>
 
-#if 1
+#if 0
 #define MAX_BUFFER_SIZE 1024
 int n_main();
 int main()
@@ -282,7 +282,7 @@ void destroy_trie(trie *t)
 int main()
 {
 #ifndef MY_TEST
-#if 0
+#if 1
     freopen("../in.txt", "r", stdin);
 #endif
 
