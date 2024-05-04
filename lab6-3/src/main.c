@@ -23,6 +23,11 @@ trie *create(char *str, int len, bool is_key)
     tmp->is_key = is_key;
     tmp->len = len;
     tmp->key = calloc(len, sizeof(char));
+    if (tmp->key == NULL)
+    {
+        fprintf(stderr, "Memory allocation failed %d\n", __LINE__);
+        return NULL;
+    }
     strncpy(tmp->key, str, len);
 
     return tmp;
