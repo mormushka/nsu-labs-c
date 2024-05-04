@@ -8,12 +8,12 @@ void swap(int *a, int *b)
     *b = tmp;
 }
 
-void heapify(int *a, const int n, const int i)
+void heapify(int *a, const size_t n, const size_t i)
 {
-    int largest = i;
+    size_t largest = i;
 
-    int left = 2 * i + 1;
-    int right = 2 * i + 2;
+    size_t left = 2 * i + 1;
+    size_t right = 2 * i + 2;
 
     if ((left < n) && (a[left] > a[largest]))
     {
@@ -31,19 +31,19 @@ void heapify(int *a, const int n, const int i)
     }
 }
 
-void heap_sort(int *a, const int n)
+void heap_sort(int *a, const size_t n)
 {
     // build max heap
-    for (int i = n / 2 - 1; i >= 0; i--)
+    for (size_t i = n / 2; i > 0; i--)
     {
-        heapify(a, n, i);
+        heapify(a, n, i - 1);
     }
 
     // heap sort
-    for (int i = n - 1; i >= 0; i--)
+    for (size_t i = n; i > 0; i--)
     {
-        swap(&a[0], &a[i]);
-        heapify(a, i, 0);
+        swap(&a[0], &a[i - 1]);
+        heapify(a, i - 1, 0);
     }
 }
 
