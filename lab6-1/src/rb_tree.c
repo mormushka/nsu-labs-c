@@ -125,44 +125,44 @@ void balance(rbt **root, rbt *node, rbt **family, int len)
 
 void insert(int data, rbt **root, rbt **family, t_memory *memory)
 {
-    rbt *newNode = create_leaf(data, memory);
-    rbt *new_node = *root;
+    rbt *new_node = create_leaf(data, memory);
+    rbt *p = *root;
 
     int len = 0;
-    while (new_node != NULL)
+    while (p != NULL)
     {
-        family[len] = new_node;
+        family[len] = p;
         len++;
-        if (newNode->data < new_node->data)
+        if (new_node->data < p->data)
         {
-            new_node = new_node->left;
+            p = p->left;
         }
         else
         {
-            new_node = new_node->right;
+            p = p->right;
         }
     }
 
     if (len == 0)
     {
-        *root = newNode;
+        *root = new_node;
     }
-    else if (newNode->data < family[len - 1]->data)
+    else if (new_node->data < family[len - 1]->data)
     {
-        family[len - 1]->left = newNode;
+        family[len - 1]->left = new_node;
     }
     else
     {
-        family[len - 1]->right = newNode;
+        family[len - 1]->right = new_node;
     }
 
-    balance(root, newNode, family, len);
+    balance(root, new_node, family, len);
 }
 
 rbt *input_tree(int tree_size, t_memory *memory)
 {
     rbt *root = NULL;
-    rbt *family[log_2(tree_size) * 2];
+    rbt *family[log_2(tree_size + 1) * 2];
 
     for (int i = 0; i < tree_size; ++i)
     {
