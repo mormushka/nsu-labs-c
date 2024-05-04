@@ -3,72 +3,6 @@
 #include <string.h>
 #include <stdbool.h>
 
-#if 0
-#define MAX_BUFFER_SIZE 1024
-int n_main();
-int main()
-{
-    // Открываем поток для выполнения команды и чтения вывода
-    FILE *fp = popen("file ../in.txt", "r");
-    if (fp == NULL)
-    {
-        perror("Ошибка выполнения команды");
-        return EXIT_FAILURE;
-    }
-
-    char buffer[MAX_BUFFER_SIZE];
-    // Считываем вывод команды
-    while (fgets(buffer, sizeof(buffer), fp) != NULL)
-    {
-        // Проверяем, содержит ли вывод информацию о кодировке
-        if (strstr(buffer, "ASCII text") != NULL)
-        {
-            fprintf(stderr, "ASCII file\n");
-            break;
-        }
-        else
-        {
-            fprintf(stderr, "NOOOO ASCII FILE!!!!\n");
-            break;
-        }
-    }
-    pclose(fp);
-
-    int result = n_main();
-    return result;
-}
-#define main n_main
-#endif
-
-#if 0
-int __allocs = 0;
-static void* my_malloc(size_t size) {
-    __allocs++;
-    return malloc(size);
-}
-static void* my_calloc(size_t count, size_t size) {
-    __allocs++;
-    return calloc(count, size);
-}
-static void my_free(void *ptr) {
-    __allocs--;
-    free(ptr);
-}
-int n_main();   
-int main(){
-    int result = n_main();
-    fprintf(stderr, "\nAllocation balance %d %s\n", __allocs, __allocs ? "- Memory leaks occur!!!" : "is ok");
-    return result;
-}
-#define malloc my_malloc
-#define calloc my_calloc
-#define free my_free
-#define main n_main
-#endif
-
-#define MY_TEST1
-#define DEBUG1
-
 typedef struct trie
 {
     char *key;
@@ -113,6 +47,10 @@ void split(trie *t, int split_point)
     t->link = separated_part;
 
     char *a = calloc(split_point, sizeof(char));
+    if (a == NULL)
+    {
+        fprintf(stderr, "Memory allocation failed %d\n", __LINE__);
+    }
     strncpy(a, t->key, split_point);
     free(t->key);
 
@@ -156,6 +94,11 @@ trie *input_tree(int count)
 {
     trie *tree = NULL;
     char *str = calloc(10001, sizeof(char));
+    if (str == NULL)
+    {
+        fprintf(stderr, "Memory allocation failed %d\n", __LINE__);
+        return NULL;
+    }
 
     for (int i = 0; i < count; ++i)
     {
@@ -181,6 +124,7 @@ void print_childrens_h(char *pr, int len_pr, trie *t)
 
     strncpy(pr + len_pr, t->key, t->len);
     len_pr += t->len;
+    pr[len_pr] = '\0';
 
     if (t->is_key)
     {
@@ -193,6 +137,10 @@ void print_childrens_h(char *pr, int len_pr, trie *t)
 void print_childrens(trie *t, char *str)
 {
     char *pr = calloc(10001, sizeof(char));
+    if (pr == NULL)
+    {
+        fprintf(stderr, "Memory allocation failed %d\n", __LINE__);
+    }
     strcpy(pr, str);
 
     int len_pr = strlen(str);
@@ -270,30 +218,23 @@ void destroy_trie(trie *t)
     {
         return;
     }
-    else
-    {
-        destroy_trie(t->next);
-        destroy_trie(t->link);
-    }
+
+    destroy_trie(t->next);
+    destroy_trie(t->link);
+
     free(t->key);
     free(t);
 }
 
 int main()
 {
-#ifndef MY_TEST
-#if 1
-    freopen("../in.txt", "r", stdin);
-#endif
-
     int count = 0;
     if (scanf("%d", &count) <= 0)
     {
         fprintf(stderr, "Input error %d\n", __LINE__);
         return EXIT_FAILURE;
     }
-    trie *tree = NULL;
-    tree = input_tree(count);
+    trie *tree = input_tree(count);
 
     char *f = calloc(10001, sizeof(char));
     if (!scanf("%10000s", f))
@@ -302,32 +243,13 @@ int main()
     }
 
     print_childrens(tree, f);
-    free(f);
     printf("\n");
+
+    free(f);
 
     printf("%zu\n", check_num_nods(tree));
 
     destroy_trie(tree);
-#endif
-
-#ifdef MY_TEST
-    trie *tree = NULL;
-
-    tree = insert(tree, "abbab");
-    tree = insert(tree, "abba");
-    tree = insert(tree, "abbr");
-    tree = insert(tree, "abbra");
-    tree = insert(tree, "bc");
-    tree = insert(tree, "b");
-    tree = insert(tree, "bac");
-    tree = insert(tree, "baca");
-
-    // trie *fd = find(tree, "ab");
-
-    print_childrens(tree, "ab");
-    printf("%zu", 1 + check_num_nods(tree));
-
-#endif
 
     return EXIT_SUCCESS;
 }
