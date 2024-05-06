@@ -4,7 +4,7 @@
 
 int main()
 {
-    int t = 1;
+    int t;
     int count = 0;
     if (scanf("%d %d", &t, &count) < 2)
     {
@@ -12,7 +12,17 @@ int main()
         return EXIT_FAILURE;
     }
 
-    b_tree *bt = input_tree(t, count);
+    input_tree_return_form return_form = input_tree(t, count);
+    if (return_form.error_code == EXIT_FAILURE)
+    {
+        if (return_form.bt)
+        {
+            destroy_b_tree(return_form.bt);
+        }
+        return EXIT_FAILURE;
+    }
+
+    b_tree *bt = return_form.bt;
 
     printf("%d", height(bt));
 

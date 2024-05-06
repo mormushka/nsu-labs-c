@@ -64,22 +64,27 @@ void move_tail(b_tree *dest, int i, b_tree *src, int j)
 }
 
 /*разбиение c-го ребенка p*/
-void split(int c, b_tree *p, int t)
+int split(int c, b_tree *p, int t)
 {
     b_tree *right_c = p->child[c]; /*правая отделившеяся часть*/
-    b_tree *left_c = create(t); /*левая отделившеяся часть*/
+    b_tree *left_c = create(t);    /*левая отделившеяся часть*/
+    if (left_c == NULL)
+    {
+        return EXIT_FAILURE;
+    }
 
     right_c->n = t - 1; /*половина от макс количества ключей*/
-    left_c->n = t - 1; /*половина от макс количества ключей*/
+    left_c->n = t - 1;  /*половина от макс количества ключей*/
 
     move_tail(left_c, 0, right_c, t); /*левую половину из правого в левого */
 
     p->n += 1; /*+1 так как из ребенка прийдет средний элемент*/
 
     move_tail(p, c + 1, p, c); /*сдвиг элементов p на 1, чтобы освободить место для среднего элемената из c ребенка*/
- 
+
     p->key[c] = right_c->key[t - 1]; /*middle*/
-    p->child[c + 1] = left_c; /*с + 1 ребенок равен правой отделившейся части*/
+    p->child[c + 1] = left_c;        /*с + 1 ребенок равен правой отделившейся части*/
+    return EXIT_SUCCESS;
 }
 
 void add_key(b_tree *bt, int k)
@@ -90,7 +95,7 @@ void add_key(b_tree *bt, int k)
     bt->key[c] = k;
 }
 
-void insert_non_full(b_tree *bt, int t, int k)
+int insert_non_full(b_tree *bt, int t, int k)
 {
     if (is_leaf(bt))
     {
@@ -101,17 +106,25 @@ void insert_non_full(b_tree *bt, int t, int k)
         int child_idx = get_child_idx(bt, k); /*в какого ребенка добавить?*/
         if (is_full(bt->child[child_idx], t))
         {
-            split(child_idx, bt, t);
+            if (split(child_idx, bt, t) == EXIT_FAILURE)
+            {
+                return EXIT_FAILURE;
+            }
         }
-        insert_non_full(bt->child[get_child_idx(bt, k)], t, k);
+        return insert_non_full(bt->child[get_child_idx(bt, k)], t, k);
     }
+    return EXIT_SUCCESS;
 }
 
-void insert(b_tree **bt, int t, int k)
+int insert(b_tree **bt, int t, int k)
 {
     if (*bt == NULL)
     {
         *bt = create(t);
+        if (*bt == NULL)
+        {
+            return EXIT_FAILURE;
+        }
         (*bt)->key[0] = k;
         (*bt)->n = 1;
     }
@@ -120,17 +133,26 @@ void insert(b_tree **bt, int t, int k)
         if (is_full(*bt, t)) /*только для корня*/
         {
             b_tree *new_root = create(t);
+            if (*bt == NULL)
+            {
+                return EXIT_FAILURE;
+            }
             new_root->child[0] = *bt;
-            split(0, new_root, t);
+            if (split(0, new_root, t) == EXIT_FAILURE)
+            {
+                return EXIT_FAILURE;
+            }
             *bt = new_root;
         }
-        insert_non_full(*bt, t, k);
+        return insert_non_full(*bt, t, k);
     }
+    return EXIT_SUCCESS;
 }
 
-b_tree *input_tree(int t, int tree_size)
+input_tree_return_form input_tree(int t, int tree_size)
 {
     b_tree *bt = NULL;
+    input_tree_return_form return_form = {.bt = NULL, .error_code = EXIT_SUCCESS};
 
     for (int i = 0; i < tree_size; ++i)
     {
@@ -140,10 +162,15 @@ b_tree *input_tree(int t, int tree_size)
             fprintf(stderr, "Input error %d\n", __LINE__);
         }
 
-        insert(&bt, t, k);
+        if (insert(&bt, t, k) == EXIT_FAILURE)
+        {
+            return_form.bt = bt;
+            return_form.error_code = EXIT_FAILURE;
+            return return_form;
+        }
     }
-
-    return bt;
+    return_form.bt = bt;
+    return return_form;
 }
 
 int height(b_tree *bt)
