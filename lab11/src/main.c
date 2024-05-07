@@ -1,9 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-void print_items(const size_t n, const size_t w, size_t *weight, size_t *cost, void *tc_void)
+void print_items(const size_t n, const size_t w, size_t *weight, size_t *cost, size_t(*tc)[w + 1][2])
 {
-    size_t(*tc)[w + 1][2] = tc_void;
     printf("%zu\n", tc[n][w][0]);
 
     size_t j = w;
