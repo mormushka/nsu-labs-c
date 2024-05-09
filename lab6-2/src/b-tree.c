@@ -1,7 +1,7 @@
 #include "b-tree.h"
 
 /*бинарный поиск (если значение меньше всех 0, если больше всех n)*/
-static int get_child_idx(const b_tree *bt, int k)
+int get_child_idx(const b_tree *bt, int k)
 {
     int left = 0;
     int right = bt->n - 1;
@@ -24,7 +24,7 @@ static int get_child_idx(const b_tree *bt, int k)
     return left;
 }
 
-static b_tree *create(int t)
+b_tree *create(int t)
 {
     b_tree *tmp = calloc(1, sizeof(b_tree));
     if (tmp == NULL)
@@ -45,18 +45,18 @@ static b_tree *create(int t)
     return tmp;
 }
 
-static bool is_leaf(b_tree *bt)
+bool is_leaf(b_tree *bt)
 {
     return bt->child[0] == NULL;
 }
 
-static bool is_full(b_tree *bt, int t)
+bool is_full(b_tree *bt, int t)
 {
     return bt->n == 2 * t - 1;
 }
 
 /*копирование хвоста из src + j в dest + i*/
-static void move_tail(b_tree *dest, int i, b_tree *src, int j)
+void move_tail(b_tree *dest, int i, b_tree *src, int j)
 {
     int t = dest->n - i; /*длинна хвоста*/
     memmove(dest->key + i, src->key + j, t * sizeof(int));
@@ -64,7 +64,7 @@ static void move_tail(b_tree *dest, int i, b_tree *src, int j)
 }
 
 /*разбиение c-го ребенка p*/
-static int split(int c, b_tree *p, int t)
+int split(int c, b_tree *p, int t)
 {
     b_tree *right_c = p->child[c]; /*правая отделившеяся часть*/
     b_tree *left_c = create(t);    /*левая отделившеяся часть*/
@@ -87,7 +87,7 @@ static int split(int c, b_tree *p, int t)
     return EXIT_SUCCESS;
 }
 
-static void add_key(b_tree *bt, int k)
+void add_key(b_tree *bt, int k)
 {
     int c = get_child_idx(bt, k);
     bt->n += 1;
@@ -95,7 +95,7 @@ static void add_key(b_tree *bt, int k)
     bt->key[c] = k;
 }
 
-static int insert_non_full(b_tree *bt, int t, int k)
+int insert_non_full(b_tree *bt, int t, int k)
 {
     if (is_leaf(bt))
     {
@@ -117,7 +117,7 @@ static int insert_non_full(b_tree *bt, int t, int k)
     return EXIT_SUCCESS;
 }
 
-static int insert(b_tree **bt, int t, int k)
+int insert(b_tree **bt, int t, int k)
 {
     if (*bt == NULL)
     {
