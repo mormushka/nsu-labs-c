@@ -69,7 +69,7 @@ char color(rbt *t)
 
 void balance(rbt **root, rbt *node, rbt **family, int len)
 {
-    if ((len != 0) && (family[len - 1]->color == RED))
+    while ((len != 0) && (family[len - 1]->color == RED))
     {
         rbt *parent = family[len - 1];
         rbt *grand_parent = family[len - 2];
@@ -82,7 +82,9 @@ void balance(rbt **root, rbt *node, rbt **family, int len)
                 parent->color = BLACK;
                 uncle->color = BLACK;
                 grand_parent->color = RED;
-                balance(root, grand_parent, family, len - 2);
+                node = grand_parent;
+                len -= 2;
+                continue;
             }
             else
             {
@@ -105,7 +107,9 @@ void balance(rbt **root, rbt *node, rbt **family, int len)
                 parent->color = BLACK;
                 uncle->color = BLACK;
                 grand_parent->color = RED;
-                balance(root, grand_parent, family, len - 2);
+                node = grand_parent;
+                len -= 2;
+                continue;
             }
             else
             {
