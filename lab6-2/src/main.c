@@ -1,28 +1,29 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <errno.h>
 #include "b-tree.h"
+#include "debug-macros.h"
 
 int main()
 {
+    //freopen("../in.txt", "r", stdin);
     int t;
     int count = 0;
     if (scanf("%d %d", &t, &count) < 2)
     {
-        fprintf(stderr, "Input error %d\n", __LINE__);
-        return EXIT_FAILURE;
+        DEBUG_PRINT("Input error");
+        return EIO;
     }
 
-    input_tree_return_form return_form = input_tree(t, count);
-    if (return_form.error_code == EXIT_FAILURE)
+    b_tree *bt;
+    if (input_tree(&bt, t, count) == EXIT_FAILURE)
     {
-        if (return_form.bt)
+        if (bt)
         {
-            destroy_b_tree(return_form.bt);
+            destroy_b_tree(bt);
         }
         return EXIT_FAILURE;
     }
-
-    b_tree *bt = return_form.bt;
 
     printf("%d", height(bt));
 

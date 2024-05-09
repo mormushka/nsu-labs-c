@@ -1,7 +1,7 @@
 #include "b-tree.h"
 
 /*бинарный поиск (если значение меньше всех 0, если больше всех n)*/
-int get_child_idx(const b_tree *bt, int k)
+static int get_child_idx(const b_tree *bt, int k)
 {
     int left = 0;
     int right = bt->n - 1;
@@ -24,12 +24,12 @@ int get_child_idx(const b_tree *bt, int k)
     return left;
 }
 
-b_tree *create(int t)
+static b_tree *create(int t)
 {
     b_tree *tmp = calloc(1, sizeof(b_tree));
     if (tmp == NULL)
     {
-        fprintf(stderr, "Memory allocation failed %d\n", __LINE__);
+        DEBUG_PRINT("Memory allocation failed");
         return NULL;
     }
     tmp->key = calloc(2 * t - 1, sizeof(int));
@@ -39,24 +39,24 @@ b_tree *create(int t)
         free(tmp->key);
         free(tmp->child);
         free(tmp);
-        fprintf(stderr, "Memory allocation failed %d\n", __LINE__);
+        DEBUG_PRINT("Memory allocation failed");
         return NULL;
     }
     return tmp;
 }
 
-bool is_leaf(b_tree *bt)
+static bool is_leaf(b_tree *bt)
 {
     return bt->child[0] == NULL;
 }
 
-bool is_full(b_tree *bt, int t)
+static bool is_full(b_tree *bt, int t)
 {
     return bt->n == 2 * t - 1;
 }
 
 /*копирование хвоста из src + j в dest + i*/
-void move_tail(b_tree *dest, int i, b_tree *src, int j)
+static void move_tail(b_tree *dest, int i, b_tree *src, int j)
 {
     int t = dest->n - i; /*длинна хвоста*/
     memmove(dest->key + i, src->key + j, t * sizeof(int));
@@ -64,13 +64,13 @@ void move_tail(b_tree *dest, int i, b_tree *src, int j)
 }
 
 /*разбиение c-го ребенка p*/
-int split(int c, b_tree *p, int t)
+static int split(int c, b_tree *p, int t)
 {
     b_tree *right_c = p->child[c]; /*правая отделившеяся часть*/
     b_tree *left_c = create(t);    /*левая отделившеяся часть*/
     if (left_c == NULL)
     {
-        return EXIT_FAILURE;
+        return ENOMEM;
     }
 
     right_c->n = t - 1; /*половина от макс количества ключей*/
@@ -87,7 +87,7 @@ int split(int c, b_tree *p, int t)
     return EXIT_SUCCESS;
 }
 
-void add_key(b_tree *bt, int k)
+static void add_key(b_tree *bt, int k)
 {
     int c = get_child_idx(bt, k);
     bt->n += 1;
@@ -95,7 +95,7 @@ void add_key(b_tree *bt, int k)
     bt->key[c] = k;
 }
 
-int insert_non_full(b_tree *bt, int t, int k)
+static int insert_non_full(b_tree *bt, int t, int k)
 {
     if (is_leaf(bt))
     {
@@ -106,9 +106,9 @@ int insert_non_full(b_tree *bt, int t, int k)
         int child_idx = get_child_idx(bt, k); /*в какого ребенка добавить?*/
         if (is_full(bt->child[child_idx], t))
         {
-            if (split(child_idx, bt, t) == EXIT_FAILURE)
+            if (split(child_idx, bt, t))
             {
-                return EXIT_FAILURE;
+                return ENOMEM;
             }
         }
         return insert_non_full(bt->child[get_child_idx(bt, k)], t, k);
@@ -116,14 +116,14 @@ int insert_non_full(b_tree *bt, int t, int k)
     return EXIT_SUCCESS;
 }
 
-int insert(b_tree **bt, int t, int k)
+static int insert(b_tree **bt, int t, int k)
 {
     if (*bt == NULL)
     {
         *bt = create(t);
         if (*bt == NULL)
         {
-            return EXIT_FAILURE;
+            return ENOMEM;
         }
         (*bt)->key[0] = k;
         (*bt)->n = 1;
@@ -135,12 +135,12 @@ int insert(b_tree **bt, int t, int k)
             b_tree *new_root = create(t);
             if (*bt == NULL)
             {
-                return EXIT_FAILURE;
+                return ENOMEM;
             }
             new_root->child[0] = *bt;
-            if (split(0, new_root, t) == EXIT_FAILURE)
+            if (split(0, new_root, t))
             {
-                return EXIT_FAILURE;
+                return ENOMEM;
             }
             *bt = new_root;
         }
@@ -149,28 +149,25 @@ int insert(b_tree **bt, int t, int k)
     return EXIT_SUCCESS;
 }
 
-input_tree_return_form input_tree(int t, int tree_size)
+int input_tree(b_tree **bt, int t, int tree_size)
 {
-    b_tree *bt = NULL;
-    input_tree_return_form return_form = {.bt = NULL, .error_code = EXIT_SUCCESS};
-
+    *bt = NULL;
     for (int i = 0; i < tree_size; ++i)
     {
         int k = 0;
-        if (scanf("%d", &k) < 1)
+        int return_scnaf = scanf("%d", &k);
+        if (return_scnaf < 1)
         {
-            fprintf(stderr, "Input error %d\n", __LINE__);
+            DEBUG_PRINT("Input error");
+            return EIO;
         }
 
-        if (insert(&bt, t, k) == EXIT_FAILURE)
+        if (insert(bt, t, k))
         {
-            return_form.bt = bt;
-            return_form.error_code = EXIT_FAILURE;
-            return return_form;
+            return ENOMEM;
         }
     }
-    return_form.bt = bt;
-    return return_form;
+    return EXIT_SUCCESS;
 }
 
 int height(b_tree *bt)
