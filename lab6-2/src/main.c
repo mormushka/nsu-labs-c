@@ -6,7 +6,6 @@
 
 int main()
 {
-    //freopen("../in.txt", "r", stdin);
     int t;
     int count = 0;
     if (scanf("%d %d", &t, &count) < 2)
