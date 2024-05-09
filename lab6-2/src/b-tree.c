@@ -106,9 +106,10 @@ static int insert_non_full(b_tree *bt, int t, int k)
         int child_idx = get_child_idx(bt, k); /*в какого ребенка добавить?*/
         if (is_full(bt->child[child_idx], t))
         {
-            if (split(child_idx, bt, t))
+            int return_value = split(child_idx, bt, t);
+            if (return_value)
             {
-                return ENOMEM;
+                return return_value;
             }
         }
         return insert_non_full(bt->child[get_child_idx(bt, k)], t, k);
@@ -138,9 +139,10 @@ static int insert(b_tree **bt, int t, int k)
                 return ENOMEM;
             }
             new_root->child[0] = *bt;
-            if (split(0, new_root, t))
+            int return_value = split(0, new_root, t);
+            if (return_value)
             {
-                return ENOMEM;
+                return return_value;
             }
             *bt = new_root;
         }
@@ -155,16 +157,16 @@ int input_tree(b_tree **bt, int t, int tree_size)
     for (int i = 0; i < tree_size; ++i)
     {
         int k = 0;
-        int return_scnaf = scanf("%d", &k);
-        if (return_scnaf < 1)
+        if (scanf("%d", &k) < 1)
         {
             DEBUG_PRINT("Input error");
             return EIO;
         }
 
-        if (insert(bt, t, k))
+        int return_value = insert(bt, t, k);
+        if (return_value)
         {
-            return ENOMEM;
+            return return_value;
         }
     }
     return EXIT_SUCCESS;

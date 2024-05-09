@@ -16,13 +16,14 @@ int main()
     }
 
     b_tree *bt;
-    if (input_tree(&bt, t, count) == EXIT_FAILURE)
+    int return_value = input_tree(&bt, t, count);
+    if (return_value)
     {
         if (bt)
         {
             destroy_b_tree(bt);
         }
-        return EXIT_FAILURE;
+        return return_value;
     }
 
     printf("%d", height(bt));
