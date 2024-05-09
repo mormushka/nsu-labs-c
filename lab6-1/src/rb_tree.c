@@ -162,7 +162,7 @@ void insert(int data, rbt **root, rbt **family, t_memory *memory)
 rbt *input_tree(int tree_size, t_memory *memory)
 {
     rbt *root = NULL;
-    rbt *family[log_2(tree_size + 1) * 2];
+    rbt *family[42];
 
     for (int i = 0; i < tree_size; ++i)
     {

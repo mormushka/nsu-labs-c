@@ -4,7 +4,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "memory.h"
-#include "m_math.h"
 
 enum colors
 {
