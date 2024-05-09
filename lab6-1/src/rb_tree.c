@@ -69,7 +69,7 @@ char color(rbt *t)
 
 void balance(rbt **root, rbt *node, rbt **family, int len)
 {
-    while ((len != 0) && (family[len - 1]->color == RED))
+    if ((len != 0) && (family[len - 1]->color == RED))
     {
         rbt *parent = family[len - 1];
         rbt *grand_parent = family[len - 2];
@@ -82,9 +82,7 @@ void balance(rbt **root, rbt *node, rbt **family, int len)
                 parent->color = BLACK;
                 uncle->color = BLACK;
                 grand_parent->color = RED;
-                node = grand_parent;
-                len -= 2;
-                continue;
+                balance(root, grand_parent, family, len - 2);
             }
             else
             {
@@ -107,9 +105,7 @@ void balance(rbt **root, rbt *node, rbt **family, int len)
                 parent->color = BLACK;
                 uncle->color = BLACK;
                 grand_parent->color = RED;
-                node = grand_parent;
-                len -= 2;
-                continue;
+                balance(root, grand_parent, family, len - 2);
             }
             else
             {
@@ -166,7 +162,7 @@ void insert(int data, rbt **root, rbt **family, t_memory *memory)
 rbt *input_tree(int tree_size, t_memory *memory)
 {
     rbt *root = NULL;
-    rbt *family[42];
+    rbt *family[log_2(tree_size + 1) * 2];
 
     for (int i = 0; i < tree_size; ++i)
     {
