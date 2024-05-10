@@ -67,6 +67,30 @@ char color(rbt *t)
     return t ? t->color : BLACK;
 }
 
+void do_case(rotation_function first_rotate, rotation_function second_rotate, rbt *check_node,
+             rbt **node, rbt *parent, rbt *grand_parent, rbt *uncle, rbt **root, rbt **family, int *len)
+{
+    if (color(uncle) == RED)
+    {
+        parent->color = BLACK;
+        uncle->color = BLACK;
+        grand_parent->color = RED;
+        *node = grand_parent;
+        *len -= 2;
+    }
+    else
+    {
+        if (*node == check_node)
+        {
+            first_rotate(root, parent, family, *len - 1);
+            family[*len - 1] = *node;
+        }
+        family[*len - 1]->color = BLACK;
+        family[*len - 2]->color = RED;
+        second_rotate(root, grand_parent, family, *len - 2);
+    }
+}
+
 void balance(rbt **root, rbt *node, rbt **family, int len)
 {
     while ((len != 0) && (family[len - 1]->color == RED))
@@ -76,53 +100,12 @@ void balance(rbt **root, rbt *node, rbt **family, int len)
         if (parent == grand_parent->left)
         {
             rbt *uncle = grand_parent->right;
-
-            if (color(uncle) == RED)
-            {
-                parent->color = BLACK;
-                uncle->color = BLACK;
-                grand_parent->color = RED;
-                node = grand_parent;
-                len -= 2;
-                continue;
-            }
-            else
-            {
-                if (node == parent->right)
-                {
-                    rotate_left(root, parent, family, len - 1);
-                    family[len - 1] = node;
-                }
-                family[len - 1]->color = BLACK;
-                family[len - 2]->color = RED;
-                rotate_right(root, grand_parent, family, len - 2);
-                node = grand_parent;
-                len -= 2;
-                continue;
-            }
+            do_case(rotate_left, rotate_right, parent->right, &node, parent, grand_parent, uncle, root, family, &len);
         }
         else
         {
             rbt *uncle = grand_parent->left;
-
-            if (color(uncle) == RED)
-            {
-                parent->color = BLACK;
-                uncle->color = BLACK;
-                grand_parent->color = RED;
-                balance(root, grand_parent, family, len - 2);
-            }
-            else
-            {
-                if (node == parent->left)
-                {
-                    rotate_right(root, parent, family, len - 1);
-                    family[len - 1] = node;
-                }
-                family[len - 1]->color = BLACK;
-                family[len - 2]->color = RED;
-                rotate_left(root, grand_parent, family, len - 2);
-            }
+            do_case(rotate_right, rotate_left, parent->left, &node, parent, grand_parent, uncle, root, family, &len);
         }
     }
     (*root)->color = BLACK;
@@ -164,23 +147,24 @@ void insert(int data, rbt **root, rbt **family, t_memory *memory)
     balance(root, new_node, family, len);
 }
 
-rbt *input_tree(int tree_size, t_memory *memory)
+int input_tree(rbt **root, int number_nodes, t_memory *memory)
 {
-    rbt *root = NULL;
-    rbt *family[log_2(tree_size + 1) * 2];
+    *root = NULL;
+    rbt *family[log_2(number_nodes + 1) * 2];
 
-    for (int i = 0; i < tree_size; ++i)
+    for (int i = 0; i < number_nodes; ++i)
     {
         int value = 0;
-        if (scanf("%d", &value) <= 0)
+        if (scanf("%d", &value) < 1)
         {
-            fprintf(stderr, "Input error %d\n", __LINE__);
+            DEBUG_PRINT("Input error");
+            return EIO;
         }
 
-        insert(value, &root, family, memory);
+        insert(value, root, family, memory);
     }
 
-    return root;
+    return EXIT_SUCCESS;
 }
 
 int height(rbt *t, int h)

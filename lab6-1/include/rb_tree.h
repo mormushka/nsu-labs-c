@@ -3,8 +3,10 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <errno.h>
 #include "memory.h"
 #include "m_math.h"
+#include "debug_macros.h"
 
 enum colors
 {
@@ -21,14 +23,18 @@ typedef struct rbt
 
 } rbt;
 
+typedef void (*rotation_function)(rbt **root, rbt *x, rbt **family, int len);
+
 rbt *allocate_node(t_memory *memory);
 rbt *create_leaf(int data, t_memory *memory);
 void rotate_left(rbt **root, rbt *x, rbt **family, int len);
 void rotate_right(rbt **root, rbt *x, rbt **family, int len);
 char color(rbt *t);
+void do_case(rotation_function first_rotate, rotation_function second_rotate, rbt *check_node,
+             rbt **node, rbt *parent, rbt *grand_parent, rbt *uncle, rbt **root, rbt **family, int *len);
 void balance(rbt **root, rbt *node, rbt **family, int len);
 void insert(int data, rbt **root, rbt **family, t_memory *memory);
-rbt *input_tree(int tree_size, t_memory *memory);
+int input_tree(rbt **root, int number_nodes, t_memory *memory);
 int height(rbt *t, int h);
 
 #endif

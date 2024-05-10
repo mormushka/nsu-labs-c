@@ -1,23 +1,32 @@
 #include <stdio.h>
+#include <errno.h>
 #include "rb_tree.h"
+#include "debug_macros.h"
 
 int main()
 {
     int count = 0;
     if (scanf("%d", &count) < 1)
     {
-        fprintf(stderr, "Input error %d\n", __LINE__);
-        return EXIT_FAILURE;
+        DEBUG_PRINT("Input error");
+        return EIO;
     }
 
     t_memory memory = create_memory(count, sizeof(rbt));
     if (memory.buffer == NULL)
     {
-        fprintf(stderr, "Memory allocation failed %d\n", __LINE__);
-        return EXIT_FAILURE;
+        DEBUG_PRINT("Memory allocation failed");
+        return ENOMEM;
     }
 
-    rbt *root = input_tree(count, &memory);
+    rbt *root;
+    int return_value = input_tree(&root, count, &memory);
+    if (return_value) 
+    {
+        destroy_memory(&memory);
+        return return_value;
+    }
+
     printf("%d", height(root, root != NULL));
 
     destroy_memory(&memory);
