@@ -6,8 +6,8 @@
 typedef struct trie
 {
     char *key;
-    bool is_key;
     int len;
+    bool is_key;
     struct trie *link;
     struct trie *next;
 } trie;
