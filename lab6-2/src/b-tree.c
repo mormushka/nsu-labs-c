@@ -66,24 +66,24 @@ void move_tail(b_tree *dest, int i, b_tree *src, int j)
 /*разбиение c-го ребенка p*/
 int split(int c, b_tree *p, int t)
 {
-    b_tree *right_c = p->child[c]; /*правая отделившеяся часть*/
-    b_tree *left_c = create(t);    /*левая отделившеяся часть*/
-    if (left_c == NULL)
+    b_tree *left_c = p->child[c]; /*левая отделившеяся часть*/
+    b_tree *right_c = create(t);  /*правая отделившеяся часть*/
+    if (right_c == NULL)
     {
         return ENOMEM;
     }
 
-    right_c->n = t - 1; /*половина от макс количества ключей*/
-    left_c->n = t - 1;  /*половина от макс количества ключей*/
+    left_c->n = t - 1; /*половина от макс количества ключей*/
+    right_c->n = t - 1;  /*половина от макс количества ключей*/
 
-    move_tail(left_c, 0, right_c, t); /*левую половину из правого в левого */
+    move_tail(right_c, 0, left_c, t); /*правую половину из левого в правого */
 
     p->n += 1; /*+1 так как из ребенка прийдет средний элемент*/
 
     move_tail(p, c + 1, p, c); /*сдвиг элементов p на 1, чтобы освободить место для среднего элемената из c ребенка*/
 
-    p->key[c] = right_c->key[t - 1]; /*middle*/
-    p->child[c + 1] = left_c;        /*с + 1 ребенок равен правой отделившейся части*/
+    p->key[c] = left_c->key[t - 1]; /*middle*/
+    p->child[c + 1] = right_c;      /*с + 1 ребенок равен правой отделившейся части*/
     return EXIT_SUCCESS;
 }
 
