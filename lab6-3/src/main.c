@@ -2,28 +2,30 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdbool.h>
+#include <errno.h>
+#include "debug_macros.h"
 
-typedef struct trie
+typedef struct pr_tree
 {
     char *key;
     int len;
     bool is_key;
-    struct trie *link;
-    struct trie *next;
-} trie;
+    struct pr_tree *link;
+    struct pr_tree *next;
+} pr_tree;
 
 typedef struct find_info
 {
-    struct trie *value;
+    struct pr_tree *value;
     int match_len;
 } find_info;
 
-trie *create(char *sample_prefix, int len, bool is_key)
+pr_tree *create(char *sample_prefix, int len, bool is_key)
 {
-    trie *tmp = calloc(1, sizeof(trie));
+    pr_tree *tmp = calloc(1, sizeof(pr_tree));
     if (tmp == NULL)
     {
-        fprintf(stderr, "Memory allocation failed %d\n", __LINE__);
+        DEBUG_PRINT("Memory allocation failed");
         return NULL;
     }
     tmp->is_key = is_key;
@@ -32,7 +34,7 @@ trie *create(char *sample_prefix, int len, bool is_key)
     if (tmp->key == NULL)
     {
         free(tmp);
-        fprintf(stderr, "Memory allocation failed %d\n", __LINE__);
+        DEBUG_PRINT("Memory allocation failed");
         return NULL;
     }
     strncpy(tmp->key, sample_prefix, len);
@@ -54,67 +56,88 @@ int prefix(char *a, int a_len, char *b, int b_len)
 }
 
 /* Отделение хвоста в link с унаследованием is_key и link */
-void split(trie *t, int split_point)
+int split(pr_tree *t, int split_point)
 {
-    trie *tail = create(t->key + split_point, t->len - split_point, t->is_key);
+    pr_tree *tail = create(t->key + split_point, t->len - split_point, t->is_key);
+    if (tail == NULL)
+    {
+        return ENOMEM;
+    }
     tail->link = t->link;
     t->link = tail;
 
     t->key[split_point] = '\0';
     t->len = split_point;
+    return EXIT_SUCCESS;
 }
 
-void insert(trie **t, char *sample_prefix, int str_len)
+int insert(pr_tree **t, char *sample_prefix, int str_len)
 {
     if (*sample_prefix == '\0')
     {
-        return;
+        return EXIT_SUCCESS;
     }
 
-    if (!(*t))
+    if ((*t) == NULL)
     {
         (*t) = create(sample_prefix, str_len, true);
-        return;
+        if ((*t) == NULL)
+        {
+            return ENOMEM;
+        }
+        return EXIT_SUCCESS;
     }
 
     int len_common_pr = prefix(sample_prefix, str_len, (*t)->key, (*t)->len);
     if (len_common_pr == 0)
     {
-        insert(&(*t)->next, sample_prefix, str_len);
+        return insert(&(*t)->next, sample_prefix, str_len);
     }
     else
     {
         if (len_common_pr != (*t)->len)
         {
-            split(*t, len_common_pr);
+            int return_value = split(*t, len_common_pr);
+            if (return_value)
+            {
+                return return_value;
+            }
             (*t)->is_key = (len_common_pr == str_len);
         }
-        insert(&(*t)->link, sample_prefix + len_common_pr, str_len - len_common_pr);
+        return insert(&(*t)->link, sample_prefix + len_common_pr, str_len - len_common_pr);
     }
 }
 
-void input_tree(trie **root, int count)
+int input_tree(pr_tree **root, int count)
 {
     *root = NULL;
     char *sample_prefix = calloc(10001, sizeof(char));
     if (sample_prefix == NULL)
     {
-        fprintf(stderr, "Memory allocation failed %d\n", __LINE__);
-        // return NULL;
+        DEBUG_PRINT("Memory allocation failed");
+        return ENOMEM;
     }
 
     for (int i = 0; i < count; ++i)
     {
         if (!scanf("%10000s", sample_prefix))
         {
-            fprintf(stderr, "Input error %d\n", __LINE__);
+            free(sample_prefix);
+            DEBUG_PRINT("Input error");
+            return EIO;
         }
-        insert(root, sample_prefix, strlen(sample_prefix));
+        int return_value = insert(root, sample_prefix, strlen(sample_prefix));
+        if (return_value)
+        {
+            free(sample_prefix);
+            return return_value;
+        }
     }
     free(sample_prefix);
+    return EXIT_SUCCESS;
 }
 
-void print_childrens_h(char *pr, int len_pr, trie *t)
+void print_childrens_h(char *pr, int len_pr, pr_tree *t)
 {
     if (!t)
     {
@@ -135,9 +158,9 @@ void print_childrens_h(char *pr, int len_pr, trie *t)
     print_childrens_h(pr, len_pr, t->link);
 }
 
-find_info find(trie *t, char *sample, int len)
+find_info find(pr_tree *t, char *sample, int len)
 {
-    while(t)
+    while (t)
     {
         int len_common_pr = prefix(sample, len, t->key, t->len);
         if (len_common_pr == len)
@@ -166,12 +189,13 @@ find_info find(trie *t, char *sample, int len)
     return return_info;
 }
 
-void print_childrens(trie *t, char *sample_prefix)
+int print_childrens(pr_tree *t, char *sample_prefix)
 {
     char *pr = calloc(10001, sizeof(char));
     if (pr == NULL)
     {
-        fprintf(stderr, "Memory allocation failed %d\n", __LINE__);
+        DEBUG_PRINT("Memory allocation failed");
+        return ENOMEM;
     }
     strcpy(pr, sample_prefix);
 
@@ -181,7 +205,7 @@ void print_childrens(trie *t, char *sample_prefix)
     {
         printf("None");
         free(pr);
-        return;
+        return EXIT_SUCCESS;
     }
 
     if (f_inf.match_len < f_inf.value->len)
@@ -197,9 +221,10 @@ void print_childrens(trie *t, char *sample_prefix)
 
     print_childrens_h(pr, len_pr, f_inf.value->link);
     free(pr);
+    return EXIT_SUCCESS;
 }
 
-size_t check_num_nods_h(trie *t)
+size_t check_num_nods_h(pr_tree *t)
 {
     if (!t)
     {
@@ -208,20 +233,20 @@ size_t check_num_nods_h(trie *t)
     return 1 + check_num_nods_h(t->next) + check_num_nods_h(t->link);
 }
 
-size_t check_num_nods(trie *t)
+size_t check_num_nods(pr_tree *t)
 {
     return t ? (t->next ? 1 + check_num_nods_h(t) : check_num_nods_h(t)) : 0;
 }
 
-void destroy_trie(trie *t)
+void destroy_pr_tree(pr_tree *t)
 {
     if (!t)
     {
         return;
     }
 
-    destroy_trie(t->next);
-    destroy_trie(t->link);
+    destroy_pr_tree(t->next);
+    destroy_pr_tree(t->link);
 
     free(t->key);
     free(t);
@@ -233,26 +258,46 @@ int main()
     int count = 0;
     if (scanf("%d", &count) < 1)
     {
-        fprintf(stderr, "Input error %d\n", __LINE__);
+        DEBUG_PRINT("Input error");
         return EXIT_FAILURE;
     }
-    trie *tree;
-    input_tree(&tree, count);
 
-    char *sample_prefix = calloc(10001, sizeof(char));
-    if (!scanf("%10000s", sample_prefix))
+    pr_tree *tree;
+    int return_value = input_tree(&tree, count);
+    if (return_value)
     {
-        fprintf(stderr, "Input error %d\n", __LINE__);
+        destroy_pr_tree(tree);
+        return return_value;
     }
 
-    print_childrens(tree, sample_prefix);
-    printf("\n");
+    char *sample_prefix = calloc(10001, sizeof(char));
+    if (sample_prefix == NULL)
+    {
+        destroy_pr_tree(tree);
+        DEBUG_PRINT("Memory allocation failed");
+        return ENOMEM;
+    }
 
+    if (!scanf("%10000s", sample_prefix))
+    {
+        destroy_pr_tree(tree);
+        free(sample_prefix);
+        DEBUG_PRINT("Input error");
+        return EIO;
+    }
+
+    return_value = print_childrens(tree, sample_prefix);
     free(sample_prefix);
+    if (return_value)
+    {
+        destroy_pr_tree(tree);
+        return return_value;
+    }
+    printf("\n");
 
     printf("%zu\n", check_num_nods(tree));
 
-    destroy_trie(tree);
+    destroy_pr_tree(tree);
 
     return EXIT_SUCCESS;
 }
