@@ -2,7 +2,6 @@
 #define MEMORY_H
 
 #include <stdlib.h>
-#include "debug_macros.h"
 
 typedef struct t_memory
 {
