@@ -1,10 +1,6 @@
 #ifndef DEBUG_MACROS_H
 #define DEBUG_MACROS_H
 
-#define FREOPEN 0
-
-#define INCORRECT_INPUT 1
-
 #if 1
 #define DEBUG
 #endif

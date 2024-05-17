@@ -1,13 +1,12 @@
 #include <stdlib.h>
 #include <errno.h>
-#include <stdbool.h>
 #include "debug_macros.h"
 
 enum
 {
-    WHITE, /* вершина, из которой еще не был запущен dfs_visit */
-    GRAY,  /* вершина, для которой dfs_visit не завершился */
-    BLACK, /* вершина, для которой dfs_visit завершен */
+    WHITE,
+    GRAY,
+    BLACK,
     N_MAX = 2000,
 };
 
@@ -66,7 +65,7 @@ int build_graph(graph *gr, int n, int m)
     return EXIT_SUCCESS;
 }
 
-bool top_sort_dfs_visit(graph *gr, int v, int *color, int *top_sorted, int *i)
+int top_sort_dfs_visit(graph *gr, int v, int *color, int *top_sorted, int *i)
 {
     color[v] = GRAY;
 
@@ -78,42 +77,46 @@ bool top_sort_dfs_visit(graph *gr, int v, int *color, int *top_sorted, int *i)
         }
         if (color[neightbour] == GRAY)
         {
-            return false;
+            return EXIT_FAILURE;
         }
         if (color[neightbour] == WHITE)
         {
-            if (!top_sort_dfs_visit(gr, neightbour, color, top_sorted, i))
+            if (top_sort_dfs_visit(gr, neightbour, color, top_sorted, i))
             {
-                return false;
+                return EXIT_FAILURE;
             }
         }
     }
 
     color[v] = BLACK;
     top_sorted[(*i)++] = v;
-    return true;
+    return EXIT_SUCCESS;
 }
 
-bool top_sort_dfs(graph *gr, int *top_sorted)
+int top_sort_dfs(graph *gr, int *top_sorted)
 {
     int *color = calloc(sizeof(int), gr->n + 1);
-    // calloc
+    if (color == NULL)
+    {
+        DEBUG_PRINT("Memory allocation failed");
+        return ENOMEM;
+    }
 
     int i = 0;
     for (int v = 1; v <= gr->n; ++v)
     {
         if (color[v] == WHITE)
         {
-            if (!top_sort_dfs_visit(gr, v, color, top_sorted, &i))
+            if (top_sort_dfs_visit(gr, v, color, top_sorted, &i))
             {
                 free(color);
-                return false;
+                return EXIT_FAILURE;
             }
         }
     }
 
     free(color);
-    return true;
+    return EXIT_SUCCESS;
 }
 
 int main()
@@ -127,20 +130,21 @@ int main()
         return EXIT_SUCCESS;
     }
 
-    graph *gr = malloc(sizeof(gr));
+    graph *gr = malloc(sizeof(graph));
     if (gr == NULL)
     {
+        DEBUG_PRINT("Memory allocation failed");
         return ENOMEM;
     }
     gr->adj_matrix = calloc(sizeof(char), (n + 1) * (n + 1));
     if (gr->adj_matrix == NULL)
     {
         free(gr);
+        DEBUG_PRINT("Memory allocation failed");
         return ENOMEM;
     }
 
-    int return_value = build_graph(gr, n, m);
-    if (return_value)
+    if (build_graph(gr, n, m))
     {
         free(gr->adj_matrix);
         free(gr);
@@ -152,15 +156,25 @@ int main()
     {
         free(gr->adj_matrix);
         free(gr);
+        DEBUG_PRINT("Memory allocation failed");
         return ENOMEM;
     }
-    if (!top_sort_dfs(gr, top_sorted))
+
+    int return_value = top_sort_dfs(gr, top_sorted);
+    if (return_value == EXIT_FAILURE)
     {
         printf("impossible to sort");
         free(gr->adj_matrix);
         free(gr);
         free(top_sorted);
         return EXIT_SUCCESS;
+    }
+    else if (return_value) 
+    {
+        free(gr->adj_matrix);
+        free(gr);
+        free(top_sorted);
+        return return_value;
     }
 
     for (int i = n - 1; i >= 0; --i)
