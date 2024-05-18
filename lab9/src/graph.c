@@ -11,66 +11,63 @@ int input_line(unsigned *s_edge, unsigned *f_edge, unsigned *len_edge, const uns
     if (a == EOF)
     {
         printf("bad number of lines");
-        return 0;
+        return EXIT_FAILURE;
     }
 
     if (a < 3)
     {
         fprintf(stderr, "Input error %d\n", __LINE__);
-        return 0;
+        return EXIT_FAILURE;
     }
 
     if (is_bad_vertex(*s_edge, num_vertices) || is_bad_vertex(*f_edge, num_vertices))
     {
         printf("bad vertex");
-        return 0;
+        return EXIT_FAILURE;
     }
 
     if ((*len_edge == 0) || (*len_edge > INT_MAX))
     {
         printf("bad length");
-        return 0;
+        return EXIT_FAILURE;
     }
 
-    return 1;
+    return EXIT_SUCCESS;
 }
 
-void *input_graph(const unsigned num_vertices, const unsigned start, const unsigned finish, const unsigned num_edges)
+int input_graph(const unsigned num_vertices, unsigned(*graph)[num_vertices + 1], const unsigned start, const unsigned finish, const unsigned num_edges)
 {
     if (num_vertices > 5000)
     {
         printf("bad number of vertices");
-        return NULL;
+        return EXIT_FAILURE;
     }
 
     if (is_bad_vertex(start, num_vertices) || is_bad_vertex(finish, num_vertices))
     {
         printf("bad vertex");
-        return NULL;
+        return EXIT_FAILURE;
     }
 
     if (num_edges > num_vertices * (num_vertices + 1) / 2)
     {
         printf("bad number of edges");
-        return NULL;
+        return EXIT_FAILURE;
     }
-
-    unsigned(*graph)[num_vertices + 1] = calloc((num_vertices + 1) * (num_vertices + 1), sizeof(unsigned));
 
     for (unsigned i = 0; i < num_edges; ++i)
     {
         unsigned s_edge, f_edge;
         unsigned len_edge;
 
-        if (!input_line(&s_edge, &f_edge, &len_edge, num_vertices))
+        if (input_line(&s_edge, &f_edge, &len_edge, num_vertices))
         {
-            free(graph);
-            return NULL;
+            return EXIT_FAILURE;
         }
 
         graph[s_edge][f_edge] = len_edge;
         graph[f_edge][s_edge] = len_edge;
     }
 
-    return graph;
+    return EXIT_SUCCESS;
 }

@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <limits.h>
 #include <stdint.h>
+#include <errno.h>
 #include "list.h"
 #include "graph.h"
 #include "dijkstra.h"
@@ -12,18 +13,28 @@ int main()
     unsigned num_vertices, start, finish, num_edges;
     if (scanf("%u %u %u %u", &num_vertices, &start, &finish, &num_edges) < 4)
     {
-        fprintf(stderr, "Input error %d\n", __LINE__);
-        return EXIT_FAILURE;
+        return EIO;
     }
 
-    unsigned(*graph)[num_vertices + 1] = input_graph(num_vertices, start, finish, num_edges);
-    if (graph == NULL)
+    unsigned(*graph)[num_vertices + 1] = calloc((num_vertices + 1) * (num_vertices + 1), sizeof(unsigned));
+    if (graph == NULL) 
+    {
+        return ENOMEM;
+    }
+
+    if (input_graph(num_vertices, graph, start, finish, num_edges))
     {
         free(graph);
         return EXIT_SUCCESS;
     }
 
-    shortest_paths *s_paths = dijkstra_algorithm(start, graph, num_vertices);
+    shortest_paths *s_paths = NULL;
+    int rv = dijkstra_algorithm(start, num_vertices, graph, &s_paths);
+    if (rv)
+    {
+        free(graph);
+        return rv;
+    }
 
     free(graph);
 

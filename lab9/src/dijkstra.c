@@ -25,10 +25,8 @@ void init_costs(uint64_t *costs, const unsigned num_vertices)
     }
 }
 
-shortest_paths *dijkstra_algorithm(const int start, void *v_graph, const int num_vertices)
+int dijkstra_algorithm(const int start, const int num_vertices, unsigned (*graph)[num_vertices + 1], shortest_paths **s_paths)
 {
-    unsigned(*graph)[num_vertices + 1] = v_graph;
-
     uint64_t *costs = calloc(num_vertices + 1, sizeof(uint64_t));
     list **parents = calloc(num_vertices + 1, sizeof(list));
     char *processed = calloc(num_vertices + 1, sizeof(char));
@@ -37,8 +35,7 @@ shortest_paths *dijkstra_algorithm(const int start, void *v_graph, const int num
         free(costs);
         free(parents);
         free(processed);
-        fprintf(stderr, "Memory allocation failed %d\n", __LINE__);
-        return NULL;
+        return ENOMEM;
     }
 
     init_costs(costs, num_vertices);
@@ -63,14 +60,14 @@ shortest_paths *dijkstra_algorithm(const int start, void *v_graph, const int num
         processed[node] = 1;
         node = find_lovest_cost_node(costs, processed, num_vertices);
     }
-
-    shortest_paths *d_protocol = malloc(sizeof(shortest_paths));
-    d_protocol->costs = costs;
-    d_protocol->parents = parents;
-    d_protocol->num_vertices = num_vertices;
-    d_protocol->start = start;
+    *s_paths = NULL;
+    *s_paths = malloc(sizeof(shortest_paths));
+    (*s_paths)->costs = costs;
+    (*s_paths)->parents = parents;
+    (*s_paths)->num_vertices = num_vertices;
+    (*s_paths)->start = start;
     free(processed);
-    return d_protocol;
+    return EXIT_SUCCESS;
 }
 
 void destroy_shortest_path(shortest_paths *s_paths)
