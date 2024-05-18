@@ -13,8 +13,6 @@ typedef struct point
     int64_t x, y;
 } point;
 
-point p0;
-
 long double rotate(point a, point b, point c)
 {
     int64_t v1_x = b.x - a.x;
@@ -36,11 +34,12 @@ uint64_t vec_len(point a, point b)
     return (b.x - a.x) * (b.x - a.x) + (b.y - a.y) * (b.y - a.y);
 }
 
-int compare(const void *vp1, const void *vp2)
+int compare(const void *vp1, const void *vp2, void *vp0)
 {
+    point *p0 = (point *)vp0;
     point *p1 = (point *)vp1;
     point *p2 = (point *)vp2;
-    long double s = rotate(p0, *p1, *p2);
+    long double s = rotate(*p0, *p1, *p2);
     if (s < 0)
     {
         return 1;
@@ -51,7 +50,7 @@ int compare(const void *vp1, const void *vp2)
     }
     else
     {
-        if (vec_len(p0, *p1) > vec_len(p0, *p2))
+        if (vec_len(*p0, *p1) > vec_len(*p0, *p2))
         {
             return 1;
         }
@@ -77,24 +76,25 @@ int print_graham(point *points, int n)
             swap(&points[0], &points[i]);
         }
     }
-    p0 = points[0];
 
-    qsort(&points[1], n - 1, sizeof(point), compare);
+    point p0 = points[0];
 
-    int len_cv = 0;
-    ch[len_cv++] = points[0];
-    ch[len_cv++] = points[1];
+    qsort_r(&points[1], n - 1, sizeof(point), compare, &p0);
+
+    int len_ch = 0;
+    ch[len_ch++] = points[0];
+    ch[len_ch++] = points[1];
 
     for (int i = 1; i < n; ++i)
     {
-        while ((len_cv > 1) && (rotate(ch[len_cv - 2], ch[len_cv - 1], points[i]) <= 0))
+        while ((len_ch > 1) && (rotate(ch[len_ch - 2], ch[len_ch - 1], points[i]) <= 0))
         {
-            len_cv--;
+            len_ch--;
         }
-        ch[len_cv++] = points[i];
+        ch[len_ch++] = points[i];
     }
 
-    for (int i = 0; i < len_cv; ++i)
+    for (int i = 0; i < len_ch; ++i)
     {
         printf("%ld %ld\n", ch[i].x, ch[i].y);
     }
