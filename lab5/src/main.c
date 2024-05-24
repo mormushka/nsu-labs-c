@@ -39,7 +39,7 @@ int main(int argc, char *argv[])
         }
         else if (mode == 'd')
         {
-            decode(in, out, 1);
+            rv = decode(in, out, 1);
         }
 
         fclose(in);
@@ -76,7 +76,7 @@ int main(int argc, char *argv[])
         }
         else
         {
-            decode(in, inOut, 0);
+            rv = decode(in, inOut, 0);
         }
 
         fclose(in);

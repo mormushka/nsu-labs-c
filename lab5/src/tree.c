@@ -50,11 +50,12 @@ int pack_tree(tree_node *root, bit_stream *stream)
     return EXIT_SUCCESS;
 }
 
-tree_node *unpack_tree(bit_stream *stream)
+tree_node *unpack_tree(bit_stream *stream, int *error_code)
 {
     int bit;
     if (read_bit(stream, &bit))
     {
+        *error_code = EIO;
         return NULL;
     }
     if (bit == 1)
@@ -62,13 +63,26 @@ tree_node *unpack_tree(bit_stream *stream)
         unsigned char byte;
         if (read_byte(stream, &byte))
         {
+            *error_code = EIO;
             return NULL;
         }
-        return create_tree_node(byte, 0, NULL, NULL);
+        tree_node *tmp = create_tree_node(byte, 0, NULL, NULL);
+        if (!tmp)
+        {
+            *error_code = ENOMEM;
+            return NULL;
+        }
+        return tmp;
     }
-    tree_node *left = unpack_tree(stream);
-    tree_node *right = unpack_tree(stream);
-    return create_tree_node(0, 0, left, right);
+    tree_node *left = unpack_tree(stream, error_code);
+    tree_node *right = unpack_tree(stream, error_code);
+    tree_node *tmp = create_tree_node(0, 0, left, right);
+    if (!tmp)
+    {
+        *error_code = ENOMEM;
+        return NULL;
+    }
+    return tmp;
 }
 
 tree_node *create_tree(int *frequencies)
@@ -135,7 +149,7 @@ int unpack(tree_node *root, bit_stream *stream, unsigned char *c)
         int bit;
         if (read_bit(stream, &bit))
         {
-            return 1;
+            return EIO;
         }
         if (bit == 0)
         {
@@ -148,5 +162,5 @@ int unpack(tree_node *root, bit_stream *stream, unsigned char *c)
     }
 
     *c = curr_node->symbol;
-    return 0;
+    return EXIT_SUCCESS;
 }

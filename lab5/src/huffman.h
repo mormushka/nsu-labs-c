@@ -12,6 +12,6 @@
 
 void print_usage();
 int encode(FILE *raw, FILE *zipped, char terminal_mode);
-void decode(FILE *zipped, FILE *unzipped, char terminal_mode);
+int decode(FILE *zipped, FILE *unzipped, char terminal_mode);
 
 #endif

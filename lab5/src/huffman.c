@@ -133,35 +133,44 @@ int encode(FILE *in, FILE *out, char terminal_mode)
     return EXIT_SUCCESS;
 }
 
-void decode(FILE *zipped, FILE *unzipped, char terminal_mode)
+int decode(FILE *in, FILE *out, char terminal_mode)
 {
-    if (fgetc(zipped) == EOF)
+    if (fgetc(in) == EOF)
     {
-        return;
+        return EXIT_SUCCESS;
     }
     else
     {
-        fseek(zipped, 1 - terminal_mode, SEEK_SET);
+        fseek(in, 1 - terminal_mode, SEEK_SET);
     }
 
-    bit_stream *stream = create_bit_stream(zipped);
+    bit_stream *stream = create_bit_stream(in);
     if (!stream)
     {
-        return;
+        return ENOMEM;
     }
 
     int length;
-    if (fread(&length, sizeof(int), 1, zipped) != 1)
+    if (fread(&length, sizeof(int), 1, in) != 1)
     {
-        return;
+        DEBUG_PRINT("Input error");
+        return EIO;
     }
 
-    tree_node *root = unpack_tree(stream);
+    int error_code = 0;
+    tree_node *root = unpack_tree(stream, &error_code);
     if (!root)
     {
         free(stream);
-        return;
+        return ENOMEM;
     }
+    if (error_code)
+    {
+        destroy_tree(root);
+        free(stream);
+        return error_code;
+    }
+
     for (int i = 0; i < length; i++)
     {
         unsigned char c;
@@ -169,11 +178,18 @@ void decode(FILE *zipped, FILE *unzipped, char terminal_mode)
         {
             destroy_tree(root);
             free(stream);
-            return;
+            return EIO;
         }
-        fwrite(&c, sizeof(char), 1, unzipped);
+        if (fwrite(&c, sizeof(char), 1, out) != 1)
+        {
+            DEBUG_PRINT("Output error");
+            destroy_tree(root);
+            free(stream);
+            return EIO;
+        }
     }
 
     destroy_tree(root);
     free(stream);
+    return EXIT_SUCCESS;
 }
