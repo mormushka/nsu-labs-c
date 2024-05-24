@@ -59,7 +59,7 @@ int push(ttree *node, tqueue *queue)
     return EXIT_SUCCESS;
 }
 
-tqueue *build_priority_queue(int *frequencies, int len)
+tqueue *build_priority_queue(int *hist, int len)
 {
     tqueue *priority_queue = create_queue();
     if (!priority_queue)
@@ -68,9 +68,9 @@ tqueue *build_priority_queue(int *frequencies, int len)
     }
     for (int i = 0; i < len; i++)
     {
-        if (frequencies[i] != 0)
+        if (hist[i] != 0)
         {
-            ttree *node = create_tree_node(i, frequencies[i], NULL, NULL);
+            ttree *node = create_tree_node(i, hist[i], NULL, NULL);
             if (!node)
             {
                 free(priority_queue);

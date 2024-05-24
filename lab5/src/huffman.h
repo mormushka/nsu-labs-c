@@ -11,7 +11,7 @@
 #include <errno.h>
 
 void print_usage();
-int encode(FILE *raw, FILE *zipped, char terminal_mode);
-int decode(FILE *zipped, FILE *unzipped, char terminal_mode);
+int encode(FILE *in, FILE *out, char terminal_mode);
+int decode(FILE *in, FILE *out, char terminal_mode);
 
 #endif

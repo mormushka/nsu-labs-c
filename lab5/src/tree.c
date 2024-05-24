@@ -85,14 +85,14 @@ ttree *unpack_tree(tbit_stream *bit_stream, int *error_code)
     return tmp;
 }
 
-ttree *create_tree(int *frequencies)
+ttree *create_tree(int *hist)
 {
-    if (frequencies == NULL)
+    if (hist == NULL)
     {
         return NULL;
     }
 
-    tqueue *priority_queue = build_priority_queue(frequencies, ALPHABET_SIZE);
+    tqueue *priority_queue = build_priority_queue(hist, ALPHABET_SIZE);
     if (!priority_queue)
     {
         return NULL;
