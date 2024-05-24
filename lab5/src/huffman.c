@@ -8,9 +8,9 @@ void print_usage()
     printf("<file.out> - output file\n");
 }
 
-int *calc_hist(FILE *file)
+unsigned *calc_hist(FILE *file)
 {
-    int *hist = calloc(ALPHABET_SIZE, sizeof(int));
+    unsigned *hist = calloc(ALPHABET_SIZE, sizeof(int));
     if (hist == NULL)
     {
         DEBUG_PRINT("Memory allocation failed");
@@ -38,7 +38,7 @@ int encode(FILE *in, FILE *out, char terminal_mode)
     }
 
     tbit_stream *bit_stream = create_bit_stream(out);
-    int *hist = calc_hist(in);
+    unsigned *hist = calc_hist(in);
     fseek(in, 1 - terminal_mode, SEEK_SET);
 
 #ifndef NDEBUG
@@ -47,7 +47,7 @@ int encode(FILE *in, FILE *out, char terminal_mode)
     {
         if (hist[i])
         {
-            fprintf(stderr, "%.2x - %d\n", i, hist[i]);
+            fprintf(stderr, "%.2x - %u\n", i, hist[i]);
         }
     }
     fprintf(stderr, "# END FREQUENCY TABLE\n\n");
@@ -84,8 +84,8 @@ int encode(FILE *in, FILE *out, char terminal_mode)
         return ENOMEM;
     }
 
-    int length = root->freq;
-    if (fwrite(&length, sizeof(int), 1, out) != 1)
+    unsigned length = root->freq;
+    if (fwrite(&length, sizeof(unsigned), 1, out) != 1)
     {
         destroy_tree(root);
         free(bit_stream);
@@ -146,8 +146,8 @@ int decode(FILE *in, FILE *out, char terminal_mode)
         return ENOMEM;
     }
 
-    int length;
-    if (fread(&length, sizeof(int), 1, in) != 1)
+    unsigned length;
+    if (fread(&length, sizeof(unsigned), 1, in) != 1)
     {
         DEBUG_PRINT("Input error");
         return EIO;
@@ -167,7 +167,7 @@ int decode(FILE *in, FILE *out, char terminal_mode)
         return error_code;
     }
 
-    for (int i = 0; i < length; i++)
+    for (unsigned i = 0; i < length; i++)
     {
         unsigned char c;
         if (unpack(root, bit_stream, &c))

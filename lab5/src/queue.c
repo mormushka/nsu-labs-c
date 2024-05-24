@@ -36,7 +36,7 @@ int push(ttree *node, tqueue *queue)
         DEBUG_PRINT("Memory allocation failed");
         return ENOMEM;
     }
-    if (is_empty(queue) || node->freq <= queue->head->node->freq)
+    if (is_empty(queue) || (node->freq <= queue->head->node->freq))
     {
         new_node->next = queue->head;
         queue->head = new_node;
@@ -59,7 +59,7 @@ int push(ttree *node, tqueue *queue)
     return EXIT_SUCCESS;
 }
 
-tqueue *build_priority_queue(int *hist, int len)
+tqueue *build_priority_queue(unsigned *hist, int len)
 {
     tqueue *priority_queue = create_queue();
     if (!priority_queue)
