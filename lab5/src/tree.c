@@ -1,9 +1,9 @@
 #include "queue.h"
 #include "tree.h"
 
-tree_node *create_tree_node(const unsigned char symbol, const int freq, tree_node *left, tree_node *right)
+ttree *create_tree_node(const unsigned char symbol, const int freq, ttree *left, ttree *right)
 {
-    tree_node *node = malloc(sizeof(tree_node));
+    ttree *node = malloc(sizeof(ttree));
     if (!node)
     {
         DEBUG_PRINT("Memory allocation failed");
@@ -16,12 +16,12 @@ tree_node *create_tree_node(const unsigned char symbol, const int freq, tree_nod
     return node;
 }
 
-int is_leaf(tree_node *node)
+int is_leaf(ttree *node)
 {
     return !node->left;
 }
 
-void destroy_tree(tree_node *root)
+void destroy_tree(ttree *root)
 {
     if (!root)
     {
@@ -33,27 +33,27 @@ void destroy_tree(tree_node *root)
     free(root);
 }
 
-int pack_tree(tree_node *root, bit_stream *stream)
+int pack_tree(ttree *root, tbit_stream *bit_stream)
 {
     if (is_leaf(root))
     {
-        if (write_bit(1, stream) || write_byte(root->symbol, stream))
+        if (write_bit(1, bit_stream) || write_byte(root->symbol, bit_stream))
         {
             return EIO;
         }
         return EXIT_SUCCESS;
     }
-    if (write_bit(0, stream) || pack_tree(root->left, stream) || pack_tree(root->right, stream))
+    if (write_bit(0, bit_stream) || pack_tree(root->left, bit_stream) || pack_tree(root->right, bit_stream))
     {
         return EIO;
     }
     return EXIT_SUCCESS;
 }
 
-tree_node *unpack_tree(bit_stream *stream, int *error_code)
+ttree *unpack_tree(tbit_stream *bit_stream, int *error_code)
 {
     int bit;
-    if (read_bit(stream, &bit))
+    if (read_bit(bit_stream, &bit))
     {
         *error_code = EIO;
         return NULL;
@@ -61,12 +61,12 @@ tree_node *unpack_tree(bit_stream *stream, int *error_code)
     if (bit == 1)
     {
         unsigned char byte;
-        if (read_byte(stream, &byte))
+        if (read_byte(bit_stream, &byte))
         {
             *error_code = EIO;
             return NULL;
         }
-        tree_node *tmp = create_tree_node(byte, 0, NULL, NULL);
+        ttree *tmp = create_tree_node(byte, 0, NULL, NULL);
         if (!tmp)
         {
             *error_code = ENOMEM;
@@ -74,9 +74,9 @@ tree_node *unpack_tree(bit_stream *stream, int *error_code)
         }
         return tmp;
     }
-    tree_node *left = unpack_tree(stream, error_code);
-    tree_node *right = unpack_tree(stream, error_code);
-    tree_node *tmp = create_tree_node(0, 0, left, right);
+    ttree *left = unpack_tree(bit_stream, error_code);
+    ttree *right = unpack_tree(bit_stream, error_code);
+    ttree *tmp = create_tree_node(0, 0, left, right);
     if (!tmp)
     {
         *error_code = ENOMEM;
@@ -85,14 +85,14 @@ tree_node *unpack_tree(bit_stream *stream, int *error_code)
     return tmp;
 }
 
-tree_node *create_tree(int *frequencies)
+ttree *create_tree(int *frequencies)
 {
     if (frequencies == NULL)
     {
         return NULL;
     }
 
-    queue *priority_queue = build_priority_queue(frequencies, ALPHABET_SIZE);
+    tqueue *priority_queue = build_priority_queue(frequencies, ALPHABET_SIZE);
     if (!priority_queue)
     {
         return NULL;
@@ -111,16 +111,16 @@ tree_node *create_tree(int *frequencies)
 
     if (priority_queue->head->next == NULL)
     {
-        tree_node *root = pop(priority_queue);
+        ttree *root = pop_min(priority_queue);
         free(priority_queue);
         return root;
     }
 
     for (;;)
     {
-        tree_node *left = pop(priority_queue);
-        tree_node *right = pop(priority_queue);
-        tree_node *root = create_tree_node(0, left->freq + right->freq, left, right);
+        ttree *left = pop_min(priority_queue);
+        ttree *right = pop_min(priority_queue);
+        ttree *root = create_tree_node(0, left->freq + right->freq, left, right);
         if (!root)
         {
             free(priority_queue);
@@ -141,13 +141,13 @@ tree_node *create_tree(int *frequencies)
     }
 }
 
-int unpack(tree_node *root, bit_stream *stream, unsigned char *c)
+int unpack(ttree *root, tbit_stream *bit_stream, unsigned char *c)
 {
-    tree_node *curr_node = root;
+    ttree *curr_node = root;
     while (!is_leaf(curr_node))
     {
         int bit;
-        if (read_bit(stream, &bit))
+        if (read_bit(bit_stream, &bit))
         {
             return EIO;
         }

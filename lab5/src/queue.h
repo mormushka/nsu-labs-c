@@ -6,21 +6,21 @@
 #include <errno.h>
 #include <stdlib.h>
 
-typedef struct queue_node
+typedef struct tqueue_node
 {
-    tree_node *node;
-    struct queue_node *next;
-} queue_node;
+    ttree *node;
+    struct tqueue_node *next;
+} tqueue_node;
 
-typedef struct queue
+typedef struct tqueue
 {
-    queue_node *head;
-} queue;
+    tqueue_node *head;
+} tqueue;
 
-queue *create_queue(void);
-int is_empty(queue *queue);
-int push(tree_node *node, queue *queue);
-queue *build_priority_queue(int *frequencies, int len);
-tree_node *pop(queue *queue);
+tqueue *create_queue(void);
+int is_empty(tqueue *queue);
+int push(ttree *node, tqueue *queue);
+tqueue *build_priority_queue(int *frequencies, int len);
+ttree *pop_min(tqueue *queue);
 
 #endif

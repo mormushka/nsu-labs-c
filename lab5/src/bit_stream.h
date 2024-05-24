@@ -7,18 +7,18 @@
 #include "constants.h"
 #include "debug_macros.h"
 
-typedef struct bit_stream
+typedef struct tbit_stream
 {
     FILE *file;
     unsigned char data;
     int pos;
-} bit_stream;
+} tbit_stream;
 
-bit_stream *create_bit_stream(FILE *file);
-int read_bit(bit_stream *stream, int *bit);
-int read_byte(bit_stream *stream, unsigned char *byte);
-int write_bit(int bit, bit_stream *stream);
-int write_byte(unsigned char byte, bit_stream *stream);
-int flush(bit_stream *stream);
+tbit_stream *create_bit_stream(FILE *file);
+int read_bit(tbit_stream *bit_stream, int *bit);
+int read_byte(tbit_stream *bit_stream, unsigned char *byte);
+int write_bit(int bit, tbit_stream *bit_stream);
+int write_byte(unsigned char byte, tbit_stream *bit_stream);
+int flush(tbit_stream *bit_stream);
 
 #endif

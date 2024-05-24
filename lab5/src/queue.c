@@ -1,8 +1,8 @@
 #include "queue.h"
 
-queue *create_queue(void)
+tqueue *create_queue(void)
 {
-    queue *queue = malloc(sizeof(queue));
+    tqueue *queue = malloc(sizeof(queue));
     if (!queue)
     {
         return NULL;
@@ -11,9 +11,9 @@ queue *create_queue(void)
     return queue;
 }
 
-queue_node *create_queue_node(tree_node *node)
+tqueue_node *create_queue_node(ttree *node)
 {
-    queue_node *queue_node = malloc(sizeof(struct queue_node));
+    tqueue_node *queue_node = malloc(sizeof(struct tqueue_node));
     if (!queue_node)
     {
         return NULL;
@@ -23,14 +23,14 @@ queue_node *create_queue_node(tree_node *node)
     return queue_node;
 }
 
-int is_empty(queue *queue)
+int is_empty(tqueue *queue)
 {
     return queue->head == NULL;
 }
 
-int push(tree_node *node, queue *queue)
+int push(ttree *node, tqueue *queue)
 {
-    queue_node *new_node = create_queue_node(node);
+    tqueue_node *new_node = create_queue_node(node);
     if (!new_node)
     {
         DEBUG_PRINT("Memory allocation failed");
@@ -43,7 +43,7 @@ int push(tree_node *node, queue *queue)
         return EXIT_SUCCESS;
     }
 
-    queue_node *curr_node = queue->head;
+    tqueue_node *curr_node = queue->head;
     while (curr_node->next != NULL)
     {
         if (node->freq <= curr_node->next->node->freq)
@@ -59,9 +59,9 @@ int push(tree_node *node, queue *queue)
     return EXIT_SUCCESS;
 }
 
-queue *build_priority_queue(int *frequencies, int len)
+tqueue *build_priority_queue(int *frequencies, int len)
 {
-    queue *priority_queue = create_queue();
+    tqueue *priority_queue = create_queue();
     if (!priority_queue)
     {
         return NULL;
@@ -70,7 +70,7 @@ queue *build_priority_queue(int *frequencies, int len)
     {
         if (frequencies[i] != 0)
         {
-            tree_node *node = create_tree_node(i, frequencies[i], NULL, NULL);
+            ttree *node = create_tree_node(i, frequencies[i], NULL, NULL);
             if (!node)
             {
                 free(priority_queue);
@@ -86,11 +86,11 @@ queue *build_priority_queue(int *frequencies, int len)
     return priority_queue;
 }
 
-tree_node *pop(queue *queue)
+ttree *pop_min(tqueue *queue)
 {
-    queue_node *temp = queue->head;
+    tqueue_node *temp = queue->head;
     queue->head = queue->head->next;
-    tree_node *node = temp->node;
+    ttree *node = temp->node;
     free(temp);
     return node;
 }

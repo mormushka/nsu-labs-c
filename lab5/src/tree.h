@@ -6,20 +6,20 @@
 #include "debug_macros.h"
 #include <stdlib.h>
 
-typedef struct tree_node
+typedef struct ttree
 {
     unsigned char symbol;
     int freq;
-    struct tree_node *left;
-    struct tree_node *right;
-} tree_node;
+    struct ttree *left;
+    struct ttree *right;
+} ttree;
 
-tree_node *create_tree_node(const unsigned char symbol, const int freq, tree_node *left, tree_node *right);
-int is_leaf(tree_node *node);
-tree_node *create_tree(int *frequencies);
-int pack_tree(tree_node *root, bit_stream *stream);
-void destroy_tree(tree_node *root);
-tree_node *unpack_tree(bit_stream *stream, int *error_code);
-int unpack(tree_node *root, bit_stream *stream, unsigned char *c);
+ttree *create_tree_node(const unsigned char symbol, const int freq, ttree *left, ttree *right);
+int is_leaf(ttree *node);
+ttree *create_tree(int *frequencies);
+int pack_tree(ttree *root, tbit_stream *bit_stream);
+void destroy_tree(ttree *root);
+ttree *unpack_tree(tbit_stream *bit_stream, int *error_code);
+int unpack(ttree *root, tbit_stream *bit_stream, unsigned char *c);
 
 #endif

@@ -8,10 +8,10 @@ void print_usage()
     printf("<file.out> - output file\n");
 }
 
-int *create_frequency_table(FILE *file)
+int *calc_hist(FILE *file)
 {
-    int *frequencies = calloc(ALPHABET_SIZE, sizeof(int));
-    if (frequencies == NULL)
+    int *hist = calloc(ALPHABET_SIZE, sizeof(int));
+    if (hist == NULL)
     {
         DEBUG_PRINT("Memory allocation failed");
         return NULL;
@@ -19,11 +19,11 @@ int *create_frequency_table(FILE *file)
     unsigned char curr_symbol = fgetc(file);
     while (!feof(file))
     {
-        frequencies[curr_symbol] += 1;
+        hist[curr_symbol] += 1;
         curr_symbol = fgetc(file);
     }
 
-    return frequencies;
+    return hist;
 }
 
 int encode(FILE *in, FILE *out, char terminal_mode)
@@ -37,23 +37,23 @@ int encode(FILE *in, FILE *out, char terminal_mode)
         fseek(in, 1 - terminal_mode, SEEK_SET);
     }
 
-    bit_stream *stream = create_bit_stream(out);
-    int *frequencies = create_frequency_table(in);
+    tbit_stream *bit_stream = create_bit_stream(out);
+    int *hist = calc_hist(in);
     fseek(in, 1 - terminal_mode, SEEK_SET);
 
 #ifndef NDEBUG
     fprintf(stderr, "# FREQUENCY TABLE:\n");
     for (int i = 0; i < ALPHABET_SIZE; i++)
     {
-        if (frequencies[i])
+        if (hist[i])
         {
-            fprintf(stderr, "%.2x - %d\n", i, frequencies[i]);
+            fprintf(stderr, "%.2x - %d\n", i, hist[i]);
         }
     }
     fprintf(stderr, "# END FREQUENCY TABLE\n\n");
 #endif
 
-    tree_node *root = create_tree(frequencies);
+    ttree *root = create_tree(hist);
     code *codes = make_code_table(root);
 
 #ifndef NDEBUG
@@ -75,12 +75,12 @@ int encode(FILE *in, FILE *out, char terminal_mode)
     fprintf(stderr, "# END CODES TABLE\n\n");
 #endif
 
-    if (!stream || !frequencies || !root || !codes)
+    if (!bit_stream || !hist || !root || !codes)
     {
         destroy_tree(root);
-        free(stream);
+        free(bit_stream);
         free(codes);
-        free(frequencies);
+        free(hist);
         return ENOMEM;
     }
 
@@ -88,44 +88,44 @@ int encode(FILE *in, FILE *out, char terminal_mode)
     if (fwrite(&length, sizeof(int), 1, out) != 1)
     {
         destroy_tree(root);
-        free(stream);
+        free(bit_stream);
         free(codes);
-        free(frequencies);
+        free(hist);
         DEBUG_PRINT("Output error");
         return EIO;
     }
 
-    if (pack_tree(root, stream))
+    if (pack_tree(root, bit_stream))
     {
         destroy_tree(root);
-        free(stream);
+        free(bit_stream);
         free(codes);
-        free(frequencies);
+        free(hist);
         return EIO;
     }
 
     unsigned char c = fgetc(in);
     while (!feof(in))
     {
-        if (pack(c, codes, stream))
+        if (pack(c, codes, bit_stream))
         {
-            free(stream);
+            free(bit_stream);
             destroy_tree(root);
             free(codes);
-            free(frequencies);
+            free(hist);
             return EIO;
         }
         c = fgetc(in);
     }
     destroy_tree(root);
     free(codes);
-    free(frequencies);
-    if (flush(stream))
+    free(hist);
+    if (flush(bit_stream))
     {
-        free(stream);
+        free(bit_stream);
         return EIO;
     }
-    free(stream);
+    free(bit_stream);
     return EXIT_SUCCESS;
 }
 
@@ -140,8 +140,8 @@ int decode(FILE *in, FILE *out, char terminal_mode)
         fseek(in, 1 - terminal_mode, SEEK_SET);
     }
 
-    bit_stream *stream = create_bit_stream(in);
-    if (!stream)
+    tbit_stream *bit_stream = create_bit_stream(in);
+    if (!bit_stream)
     {
         return ENOMEM;
     }
@@ -154,38 +154,38 @@ int decode(FILE *in, FILE *out, char terminal_mode)
     }
 
     int error_code = 0;
-    tree_node *root = unpack_tree(stream, &error_code);
+    ttree *root = unpack_tree(bit_stream, &error_code);
     if (!root)
     {
-        free(stream);
+        free(bit_stream);
         return ENOMEM;
     }
     if (error_code)
     {
         destroy_tree(root);
-        free(stream);
+        free(bit_stream);
         return error_code;
     }
 
     for (int i = 0; i < length; i++)
     {
         unsigned char c;
-        if (unpack(root, stream, &c))
+        if (unpack(root, bit_stream, &c))
         {
             destroy_tree(root);
-            free(stream);
+            free(bit_stream);
             return EIO;
         }
         if (fwrite(&c, sizeof(char), 1, out) != 1)
         {
             DEBUG_PRINT("Output error");
             destroy_tree(root);
-            free(stream);
+            free(bit_stream);
             return EIO;
         }
     }
 
     destroy_tree(root);
-    free(stream);
+    free(bit_stream);
     return EXIT_SUCCESS;
 }

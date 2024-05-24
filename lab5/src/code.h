@@ -13,7 +13,7 @@ typedef struct code
     unsigned int length;
 } code;
 
-code *make_code_table(tree_node *root);
-int pack(unsigned char c, code *codes, bit_stream *stream);
+code *make_code_table(ttree *root);
+int pack(unsigned char c, code *codes, tbit_stream *bit_stream);
 
 #endif
