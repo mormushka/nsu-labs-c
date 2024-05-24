@@ -135,7 +135,7 @@ void decode(FILE *zipped, FILE *unzipped, char terminal_mode)
     for (int i = 0; i < length; i++)
     {
         unsigned char c;
-        if (unpack(root, stream, &c) == read_error)
+        if (unpack(root, stream, &c))
         {
             destroy_tree(root);
             free(stream);

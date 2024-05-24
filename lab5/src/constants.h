@@ -4,10 +4,4 @@
 #define ALPHABET_SIZE 256
 #define BUFFER_SIZE 8
 
-typedef enum error_code
-{
-    no_error,
-    read_error,
-} error_code;
-
 #endif

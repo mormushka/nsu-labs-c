@@ -13,20 +13,20 @@ bit_stream *create_bit_stream(FILE *file)
     return stream;
 }
 
-error_code read_bit(bit_stream *stream, int *bit)
+int read_bit(bit_stream *stream, int *bit)
 {
     if (stream->pos == 0)
     {
         if (fread(&stream->data, sizeof(char), 1, stream->file) != 1)
         {
-            return read_error;
+            return 1;
         }
         stream->pos = BUFFER_SIZE;
     }
 
     stream->pos -= 1;
     *bit = (stream->data >> stream->pos) & 1;
-    return no_error;
+    return 0;
 }
 
 void write_bit(const int bit, bit_stream *stream)
@@ -42,21 +42,21 @@ void write_bit(const int bit, bit_stream *stream)
     stream->pos += 1;
 }
 
-error_code read_byte(bit_stream *stream, unsigned char *byte)
+int read_byte(bit_stream *stream, unsigned char *byte)
 {
     *byte = 0;
     for (int i = 0; i < BUFFER_SIZE; i++)
     {
         *byte = *byte << 1;
         int bit;
-        if (read_bit(stream, &bit) == read_error)
+        if (read_bit(stream, &bit))
         {
-            return read_error;
+            return 1;
         }
         *byte = *byte | bit;
     }
 
-    return no_error;
+    return 0;
 }
 
 void write_byte(const unsigned char byte, bit_stream *stream)

@@ -20,6 +20,6 @@ tree_node *create_tree(int *frequencies);
 void pack_tree(tree_node *root, struct bit_stream *stream);
 void destroy_tree(tree_node *root);
 tree_node *unpack_tree(struct bit_stream *stream);
-error_code unpack(tree_node *root, bit_stream *stream, unsigned char *c);
+int unpack(tree_node *root, bit_stream *stream, unsigned char *c);
 
 #endif

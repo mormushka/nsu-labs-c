@@ -48,14 +48,14 @@ void pack_tree(tree_node *root, bit_stream *stream)
 tree_node *unpack_tree(bit_stream *stream)
 {
     int bit;
-    if (read_bit(stream, &bit) == read_error)
+    if (read_bit(stream, &bit))
     {
         return NULL;
     }
     if (bit == 1)
     {
         unsigned char byte;
-        if (read_byte(stream, &byte) == read_error)
+        if (read_byte(stream, &byte))
         {
             return NULL;
         }
@@ -112,15 +112,15 @@ tree_node *create_tree(int *frequencies)
     }
 }
 
-error_code unpack(tree_node *root, bit_stream *stream, unsigned char *c)
+int unpack(tree_node *root, bit_stream *stream, unsigned char *c)
 {
     tree_node *curr_node = root;
     while (!is_leaf(curr_node))
     {
         int bit;
-        if (read_bit(stream, &bit) == read_error)
+        if (read_bit(stream, &bit))
         {
-            return read_error;
+            return 1;
         }
         if (bit == 0)
         {
@@ -133,5 +133,5 @@ error_code unpack(tree_node *root, bit_stream *stream, unsigned char *c)
     }
 
     *c = curr_node->symbol;
-    return no_error;
+    return 0;
 }
