@@ -8,37 +8,38 @@ void print_usage()
     printf("<file.out> - output file\n");
 }
 
-int *create_frequency_table(FILE *in)
+int *create_frequency_table(FILE *file)
 {
     int *frequencies = calloc(ALPHABET_SIZE, sizeof(int));
-    if (!frequencies)
+    if (frequencies == NULL)
     {
+        DEBUG_PRINT("Memory allocation failed");
         return NULL;
     }
-    unsigned char curr_symbol = fgetc(in);
-    while (!feof(in))
+    unsigned char curr_symbol = fgetc(file);
+    while (!feof(file))
     {
         frequencies[curr_symbol] += 1;
-        curr_symbol = fgetc(in);
+        curr_symbol = fgetc(file);
     }
 
     return frequencies;
 }
 
-void encode(FILE *raw, FILE *zipped, char terminal_mode)
+int encode(FILE *in, FILE *out, char terminal_mode)
 {
-    if (fgetc(raw) == EOF)
+    if (fgetc(in) == EOF)
     {
-        return;
+        return EXIT_SUCCESS;
     }
     else
     {
-        fseek(raw, 1 - terminal_mode, SEEK_SET);
+        fseek(in, 1 - terminal_mode, SEEK_SET);
     }
 
-    bit_stream *stream = create_bit_stream(zipped);
-    int *frequencies = create_frequency_table(raw);
-    fseek(raw, 1 - terminal_mode, SEEK_SET);
+    bit_stream *stream = create_bit_stream(out);
+    int *frequencies = create_frequency_table(in);
+    fseek(in, 1 - terminal_mode, SEEK_SET);
 
 #ifndef NDEBUG
     fprintf(stderr, "# FREQUENCY TABLE:\n");
@@ -77,30 +78,59 @@ void encode(FILE *raw, FILE *zipped, char terminal_mode)
     if (!stream || !frequencies || !root || !codes)
     {
         destroy_tree(root);
+        free(stream);
         free(codes);
         free(frequencies);
-        free(stream);
-        return;
+        return ENOMEM;
     }
-    int length = root->freq;
-    fwrite(&length, sizeof(int), 1, zipped);
 
-    pack_tree(root, stream);
-    while (!feof(raw))
+    int length = root->freq;
+    if (fwrite(&length, sizeof(int), 1, out) != 1)
     {
-        unsigned char c = fgetc(raw);
-        if (feof(raw))
+        destroy_tree(root);
+        free(stream);
+        free(codes);
+        free(frequencies);
+        DEBUG_PRINT("Output error");
+        return EIO;
+    }
+
+    if (pack_tree(root, stream))
+    {
+        destroy_tree(root);
+        free(stream);
+        free(codes);
+        free(frequencies);
+        return EIO;
+    }
+
+    while (!feof(in))
+    {
+        unsigned char c = fgetc(in);
+        if (feof(in))
         {
             break;
         }
 
-        pack(c, codes, stream);
+        if (pack(c, codes, stream))
+        {
+            free(stream);
+            destroy_tree(root);
+            free(codes);
+            free(frequencies);
+            return EIO;
+        }
     }
-    flush(stream);
     destroy_tree(root);
     free(codes);
     free(frequencies);
+    if (flush(stream))
+    {
+        free(stream);
+        return EIO;
+    }
     free(stream);
+    return EXIT_SUCCESS;
 }
 
 void decode(FILE *zipped, FILE *unzipped, char terminal_mode)

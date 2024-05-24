@@ -8,9 +8,10 @@
 #include "debug_macros.h"
 #include <stdlib.h>
 #include <stdio.h>
+#include <errno.h>
 
 void print_usage();
-void encode(FILE *raw, FILE *zipped, char terminal_mode);
+int encode(FILE *raw, FILE *zipped, char terminal_mode);
 void decode(FILE *zipped, FILE *unzipped, char terminal_mode);
 
 #endif

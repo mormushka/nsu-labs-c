@@ -1,6 +1,8 @@
 #include "huffman.h"
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 int main(int argc, char *argv[])
 {
@@ -13,57 +15,74 @@ int main(int argc, char *argv[])
             return EXIT_FAILURE;
         }
 
-        FILE *fl = fopen(argv[2], "rb");
-        if (fl == NULL)
+        FILE *in = fopen(argv[2], "rb");
+        if (in == NULL)
         {
-            printf("Error: Could not open input file %s for reading.\n", argv[2]);
+            printf("Error: Could not open input file %s for reading. %s\n", argv[2], strerror(errno));
             print_usage();
-            return EXIT_FAILURE;
+            return errno;
         }
 
-        FILE *fl_out = fopen(argv[3], "wb");
-        if (fl_out == NULL)
+        FILE *out = fopen(argv[3], "wb");
+        if (out == NULL)
         {
-            printf("Error: Could not open output file %s for writing.\n", argv[3]);
-            fclose(fl);
+            printf("Error: Could not open output file %s for writing. %s\n", argv[3], strerror(errno));
+            fclose(in);
             print_usage();
-            return EXIT_FAILURE;
+            return errno;
         }
 
+        int rv = 0;
         if (mode == 'c')
         {
-            encode(fl, fl_out, 1);
+            rv = encode(in, out, 1);
         }
         else if (mode == 'd')
         {
-            decode(fl, fl_out, 1);
+            decode(in, out, 1);
         }
 
-        fclose(fl);
-        fclose(fl_out);
+        fclose(in);
+        fclose(out);
+
+        return rv;
     }
     else if (argc == 1)
     {
-        char mode;
-        FILE *fl = fopen("in.txt", "rb");
-        FILE *flOut = fopen("out.txt", "wb");
-        if (fread(&mode, 1, 1, fl) < 1)
+        FILE *in = fopen("in.txt", "rb");
+        if (in == NULL)
         {
-            fclose(fl);
-            fclose(flOut);
-            return EXIT_FAILURE;
+            return errno;
         }
+        FILE *inOut = fopen("out.txt", "wb");
+        if (in == NULL)
+        {
+            fclose(in);
+            return errno;
+        }
+
+        char mode;
+        if (fread(&mode, 1, 1, in) != 1)
+        {
+            fclose(in);
+            fclose(inOut);
+            return EIO;
+        }
+
+        int rv = 0;
         if (mode == 'c')
         {
-            encode(fl, flOut, 0);
+            rv = encode(in, inOut, 0);
         }
         else
         {
-            decode(fl, flOut, 0);
+            decode(in, inOut, 0);
         }
-        fclose(fl);
-        fclose(flOut);
-        return EXIT_SUCCESS;
+
+        fclose(in);
+        fclose(inOut);
+
+        return rv;
     }
     else
     {

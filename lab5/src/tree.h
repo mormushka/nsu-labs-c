@@ -17,7 +17,7 @@ typedef struct tree_node
 tree_node *create_tree_node(const unsigned char symbol, const int freq, tree_node *left, tree_node *right);
 int is_leaf(tree_node *node);
 tree_node *create_tree(int *frequencies);
-void pack_tree(tree_node *root, struct bit_stream *stream);
+int pack_tree(tree_node *root, struct bit_stream *stream);
 void destroy_tree(tree_node *root);
 tree_node *unpack_tree(struct bit_stream *stream);
 int unpack(tree_node *root, bit_stream *stream, unsigned char *c);

@@ -6,6 +6,7 @@ tree_node *create_tree_node(const unsigned char symbol, const int freq, tree_nod
     tree_node *node = malloc(sizeof(tree_node));
     if (!node)
     {
+        DEBUG_PRINT("Memory allocation failed");
         return NULL;
     }
     node->symbol = symbol;
@@ -22,7 +23,7 @@ int is_leaf(tree_node *node)
 
 void destroy_tree(tree_node *root)
 {
-    if (root == NULL)
+    if (!root)
     {
         return;
     }
@@ -32,17 +33,21 @@ void destroy_tree(tree_node *root)
     free(root);
 }
 
-void pack_tree(tree_node *root, bit_stream *stream)
+int pack_tree(tree_node *root, bit_stream *stream)
 {
     if (is_leaf(root))
     {
-        write_bit(1, stream);
-        write_byte(root->symbol, stream);
-        return;
+        if (write_bit(1, stream) || write_byte(root->symbol, stream))
+        {
+            return EIO;
+        }
+        return EXIT_SUCCESS;
     }
-    write_bit(0, stream);
-    pack_tree(root->left, stream);
-    pack_tree(root->right, stream);
+    if (write_bit(0, stream) || pack_tree(root->left, stream) || pack_tree(root->right, stream))
+    {
+        return EIO;
+    }
+    return EXIT_SUCCESS;
 }
 
 tree_node *unpack_tree(bit_stream *stream)
@@ -68,7 +73,16 @@ tree_node *unpack_tree(bit_stream *stream)
 
 tree_node *create_tree(int *frequencies)
 {
+    if (frequencies == NULL)
+    {
+        return NULL;
+    }
+
     queue *priority_queue = build_priority_queue(frequencies, ALPHABET_SIZE);
+    if (!priority_queue)
+    {
+        return NULL;
+    }
 
 #ifndef NDEBUG
     fprintf(stderr, "# PRIOTITY QUEUE:\n");
@@ -80,6 +94,7 @@ tree_node *create_tree(int *frequencies)
     }
     fprintf(stderr, "# END PRIOTITY QUEUE\n\n");
 #endif
+
     if (priority_queue->head->next == NULL)
     {
         tree_node *root = pop(priority_queue);
@@ -104,7 +119,7 @@ tree_node *create_tree(int *frequencies)
             return root;
         }
 
-        if (!push(root, priority_queue))
+        if (push(root, priority_queue))
         {
             free(priority_queue);
             return NULL;

@@ -5,6 +5,7 @@
 #include "constants.h"
 #include "bit_stream.h"
 #include "tree.h"
+#include "debug_macros.h"
 
 typedef struct code
 {
@@ -13,6 +14,6 @@ typedef struct code
 } code;
 
 code *make_code_table(tree_node *root);
-void pack(unsigned char c, code *codes, bit_stream *stream);
+int pack(unsigned char c, code *codes, bit_stream *stream);
 
 #endif

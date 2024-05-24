@@ -33,13 +33,14 @@ int push(tree_node *node, queue *queue)
     queue_node *new_node = create_queue_node(node);
     if (!new_node)
     {
-        return 0;
+        DEBUG_PRINT("Memory allocation failed");
+        return ENOMEM;
     }
     if (is_empty(queue) || node->freq <= queue->head->node->freq)
     {
         new_node->next = queue->head;
         queue->head = new_node;
-        return 1;
+        return EXIT_SUCCESS;
     }
 
     queue_node *curr_node = queue->head;
@@ -55,7 +56,7 @@ int push(tree_node *node, queue *queue)
 
     new_node->next = curr_node->next;
     curr_node->next = new_node;
-    return 1;
+    return EXIT_SUCCESS;
 }
 
 queue *build_priority_queue(int *frequencies, int len)
@@ -75,7 +76,7 @@ queue *build_priority_queue(int *frequencies, int len)
                 free(priority_queue);
                 return NULL;
             }
-            if (!push(node, priority_queue))
+            if (push(node, priority_queue))
             {
                 free(priority_queue);
                 return NULL;

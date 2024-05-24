@@ -14,20 +14,29 @@ void get_codes(tree_node *root, code *codes, const unsigned long long code, cons
 
 code *make_code_table(tree_node *root)
 {
-    code *codes = malloc(sizeof(struct code) * ALPHABET_SIZE);
-    if (!codes)
+    if (!root)
     {
+        return NULL;
+    }
+    code *codes = malloc(sizeof(struct code) * ALPHABET_SIZE);
+    if (codes == NULL)
+    {
+        DEBUG_PRINT("Memory allocation failed");
         return NULL;
     }
     get_codes(root, codes, 0, 0);
     return codes;
 }
 
-void pack(const unsigned char c, code *codes, bit_stream *stream)
+int pack(const unsigned char c, code *codes, bit_stream *stream)
 {
     for (int i = codes[c].length - 1; i >= 0; i--) /// исправить кода, нахуя они реверснутые
     {
         int bit = (codes[c].code >> i) & 1;
-        write_bit(bit, stream);
+        if (write_bit(bit, stream))
+        {
+            return EIO;
+        }
     }
+    return EXIT_SUCCESS;
 }
