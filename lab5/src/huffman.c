@@ -40,12 +40,39 @@ void encode(FILE *raw, FILE *zipped, char terminal_mode)
     int *frequencies = create_frequency_table(raw);
     fseek(raw, 1 - terminal_mode, SEEK_SET);
 
-    //DEBUG_FREQUENCY_TABLE(frequencies, ALPHABET_SIZE);
+#ifndef NDEBUG
+    fprintf(stderr, "# FREQUENCY TABLE:\n");
+    for (int i = 0; i < ALPHABET_SIZE; i++)
+    {
+        if (frequencies[i])
+        {
+            fprintf(stderr, "%.2x - %d\n", i, frequencies[i]);
+        }
+    }
+    fprintf(stderr, "# END FREQUENCY TABLE\n\n");
+#endif
 
     tree_node *root = create_tree(frequencies);
     code *codes = make_code_table(root);
 
-    //DEBUG_PRINT_CODES_TABLE(codes, ALPHABET_SIZE);
+#ifndef NDEBUG
+    fprintf(stderr, "# CODES TABLE:\n");
+    for (int i = 0; i < ALPHABET_SIZE; i++)
+    {
+        unsigned long long k = codes[i].code;
+        if (codes[i].length)
+        {
+            fprintf(stderr, "%.2x - ", i);
+            for (int j = 0; j < codes[i].length; j++)
+            {
+                fprintf(stderr, "%llu", k & 1);
+                k = (k >> 1);
+            }
+            fprintf(stderr, "\n");
+        }
+    }
+    fprintf(stderr, "# END CODES TABLE\n\n");
+#endif
 
     if (!stream || !frequencies || !root || !codes)
     {

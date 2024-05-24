@@ -3,6 +3,7 @@
 
 #include "constants.h"
 #include "bit_stream.h"
+#include "debug_macros.h"
 #include <stdlib.h>
 
 typedef struct tree_node

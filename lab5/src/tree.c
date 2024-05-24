@@ -69,10 +69,10 @@ tree_node *unpack_tree(bit_stream *stream)
 tree_node *create_tree(int *frequencies)
 {
     queue *priority_queue = build_priority_queue(frequencies, ALPHABET_SIZE);
-#if 0
-    /* PRINT PRIOTITY QUEUE */
+
+#ifndef NDEBUG
     fprintf(stderr, "# PRIOTITY QUEUE:\n");
-    QueueNode *tmp = priority_queue->head;
+    queue_node *tmp = priority_queue->head;
     while (tmp)
     {
         fprintf(stderr, "%.2x - %d\n", (int)(tmp->node->symbol), tmp->node->freq);
@@ -80,7 +80,6 @@ tree_node *create_tree(int *frequencies)
     }
     fprintf(stderr, "# END PRIOTITY QUEUE\n\n");
 #endif
-
     if (priority_queue->head->next == NULL)
     {
         tree_node *root = pop(priority_queue);
@@ -110,17 +109,6 @@ tree_node *create_tree(int *frequencies)
             free(priority_queue);
             return NULL;
         }
-#if 0
-        /* PRINT PRIOTITY QUEUE */
-        fprintf(stderr, "# PRIOTITY QUEUE:\n");
-        QueueNode *tmp = priority_queue->head;
-        while (tmp)
-        {
-            fprintf(stderr, "%.2x - %d\n", (int)(tmp->node->symbol), tmp->node->freq);
-            tmp = tmp->next;
-        }
-        fprintf(stderr, "# END PRIOTITY QUEUE\n\n");
-#endif
     }
 }
 
