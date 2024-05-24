@@ -104,14 +104,9 @@ int encode(FILE *in, FILE *out, char terminal_mode)
         return EIO;
     }
 
+    unsigned char c = fgetc(in);
     while (!feof(in))
     {
-        unsigned char c = fgetc(in);
-        if (feof(in))
-        {
-            break;
-        }
-
         if (pack(c, codes, stream))
         {
             free(stream);
@@ -120,6 +115,7 @@ int encode(FILE *in, FILE *out, char terminal_mode)
             free(frequencies);
             return EIO;
         }
+        c = fgetc(in);
     }
     destroy_tree(root);
     free(codes);

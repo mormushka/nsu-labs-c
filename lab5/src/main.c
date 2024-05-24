@@ -9,7 +9,7 @@ int main(int argc, char *argv[])
     if (argc == 4)
     {
         char mode = argv[1][0];
-        if (mode != 'c' && mode != 'd')
+        if ((mode != 'c') && (mode != 'd'))
         {
             print_usage();
             return EXIT_FAILURE;
