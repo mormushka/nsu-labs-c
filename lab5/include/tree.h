@@ -18,8 +18,8 @@ ttree *create_tree_node(const unsigned char symbol, const unsigned freq, ttree *
 int is_leaf(ttree *node);
 ttree *create_tree(unsigned *hist);
 int pack_tree(ttree *root, tbit_stream *bit_stream);
-void destroy_tree(ttree *root);
 ttree *unpack_tree(tbit_stream *bit_stream, int *error_code);
 int unpack(ttree *root, tbit_stream *bit_stream, unsigned char *c);
+void destroy_tree(ttree *root);
 
 #endif

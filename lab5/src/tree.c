@@ -100,7 +100,7 @@ ttree *create_tree(unsigned *hist)
 
 #ifndef NDEBUG
     fprintf(stderr, "# PRIOTITY QUEUE:\n");
-    queue_node *tmp = priority_queue->head;
+    tqueue_node *tmp = priority_queue->head;
     while (tmp)
     {
         fprintf(stderr, "%.2x - %u\n", (int)(tmp->node->symbol), tmp->node->freq);

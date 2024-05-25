@@ -4,7 +4,7 @@
 #if 1
 #define NDEBUG
 #endif
-
+        
 #ifndef NDEBUG
 #include <stdio.h>
 #define DEBUG_PRINT(msg)                                                           \

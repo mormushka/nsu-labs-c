@@ -1,6 +1,6 @@
 #include "code.h"
 
-void get_codes(ttree *root, code *codes, const unsigned long long code, const int cur_len)
+void get_code(ttree *root, code *codes, const unsigned long long code, const int cur_len)
 {
     if (is_leaf(root))
     {
@@ -8,8 +8,8 @@ void get_codes(ttree *root, code *codes, const unsigned long long code, const in
         codes[root->symbol].length = cur_len;
         return;
     }
-    get_codes(root->left, codes, code << 1, cur_len + 1);
-    get_codes(root->right, codes, (code << 1) | 1, cur_len + 1);
+    get_code(root->left, codes, code << 1, cur_len + 1);
+    get_code(root->right, codes, (code << 1) | 1, cur_len + 1);
 }
 
 code * make_code_table(ttree *root)
@@ -24,7 +24,7 @@ code * make_code_table(ttree *root)
         DEBUG_PRINT("Memory allocation failed");
         return NULL;
     }
-    get_codes(root, codes, 0, 0);
+    get_code(root, codes, 0, 0);
     return codes;
 }
 

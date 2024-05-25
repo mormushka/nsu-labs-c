@@ -108,7 +108,7 @@ int encode(FILE *in, FILE *out, char terminal_mode)
     while (!feof(in))
     {
         if (pack(c, codes, bit_stream))
-        {
+        {   
             free(bit_stream);
             destroy_tree(root);
             free(codes);

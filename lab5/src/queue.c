@@ -2,7 +2,7 @@
 
 tqueue *create_queue(void)
 {
-    tqueue *queue = malloc(sizeof(queue));
+    tqueue *queue = malloc(sizeof(*queue));
     if (!queue)
     {
         return NULL;
