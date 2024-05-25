@@ -2,6 +2,7 @@
 #define LIST_H
 
 #include <stdlib.h>
+#include <errno.h>
 
 typedef struct list
 {
@@ -9,7 +10,7 @@ typedef struct list
     struct list *next;
 } list;
 
-void push(list **l, int value);
+int push(list **l, int value);
 void destroy_list(list *l);
 
 #endif

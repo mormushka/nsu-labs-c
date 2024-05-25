@@ -53,7 +53,13 @@ int dijkstra_algorithm(const int start, const int num_vertices, unsigned (*graph
                 if (new_cost <= costs[i])
                 {
                     costs[i] = new_cost;
-                    push(&parents[i], node);
+                    if (push(&parents[i], node))
+                    {
+                        free(costs);
+                        free(parents);
+                        free(processed);
+                        return ENOMEM;
+                    }
                 }
             }
         }
@@ -62,6 +68,13 @@ int dijkstra_algorithm(const int start, const int num_vertices, unsigned (*graph
     }
     *s_paths = NULL;
     *s_paths = malloc(sizeof(shortest_paths));
+    if (s_paths == NULL)
+    {
+        free(costs);
+        free(parents);
+        free(processed);
+        return ENOMEM;
+    }
     (*s_paths)->costs = costs;
     (*s_paths)->parents = parents;
     (*s_paths)->num_vertices = num_vertices;
