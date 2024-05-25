@@ -54,8 +54,8 @@ int main(int argc, char *argv[])
         {
             return errno;
         }
-        FILE *inOut = fopen("out.txt", "wb");
-        if (in == NULL)
+        FILE *out = fopen("out.txt", "wb");
+        if (out == NULL)
         {
             fclose(in);
             return errno;
@@ -65,22 +65,22 @@ int main(int argc, char *argv[])
         if (fread(&mode, 1, 1, in) != 1)
         {
             fclose(in);
-            fclose(inOut);
+            fclose(out);
             return EIO;
         }
 
         int rv = 0;
         if (mode == 'c')
         {
-            rv = encode(in, inOut, 0);
+            rv = encode(in, out, 0);
         }
         else
         {
-            rv = decode(in, inOut, 0);
+            rv = decode(in, out, 0);
         }
 
         fclose(in);
-        fclose(inOut);
+        fclose(out);
 
         return rv;
     }
