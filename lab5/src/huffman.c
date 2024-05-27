@@ -8,16 +8,16 @@ void print_usage()
     printf("<file.out> - output file\n");
 }
 
-unsigned *calc_hist(FILE *file)
+size_t *calc_hist(FILE *file)
 {
-    unsigned *hist = calloc(ALPHABET_SIZE, sizeof(int));
+    size_t *hist = calloc(ALPHABET_SIZE, sizeof(size_t));
     if (hist == NULL)
     {
         DEBUG_PRINT("Memory allocation failed");
         return NULL;
     }
-    unsigned char curr_symbol = fgetc(file);
-    while (!feof(file))
+    int curr_symbol = fgetc(file);
+    while (curr_symbol != EOF)
     {
         hist[curr_symbol] += 1;
         curr_symbol = fgetc(file);
@@ -26,7 +26,7 @@ unsigned *calc_hist(FILE *file)
     return hist;
 }
 
-int math_len_shift(code *codes, unsigned *hist)
+int math_len_shift(code *codes, size_t *hist)
 {
     int len = 0;
     int n = 0;
@@ -41,7 +41,7 @@ int math_len_shift(code *codes, unsigned *hist)
     return 8 - ((len + 2 * n - 1) % 8);
 }
 
-int shift(code *codes, unsigned *hist, tbit_stream *bit_stream)
+int shift(code *codes, size_t *hist, tbit_stream *bit_stream)
 {
     int len_shift = math_len_shift(codes, hist);
     if (len_shift == 0)
@@ -79,7 +79,7 @@ int encode(FILE *in, FILE *out, char terminal_mode)
     }
 
     tbit_stream *bit_stream = create_bit_stream(out);
-    unsigned *hist = calc_hist(in);
+    size_t *hist = calc_hist(in);
     fseek(in, 1 - terminal_mode, SEEK_SET);
 
 #ifndef NDEBUG
@@ -88,7 +88,7 @@ int encode(FILE *in, FILE *out, char terminal_mode)
     {
         if (hist[i])
         {
-            fprintf(stderr, "%.2x - %u\n", i, hist[i]);
+            fprintf(stderr, "%.2x - %zu\n", i, hist[i]);
         }
     }
     fprintf(stderr, "# END FREQUENCY TABLE\n\n");
@@ -156,8 +156,8 @@ int encode(FILE *in, FILE *out, char terminal_mode)
         return EIO;
     }
 
-    unsigned char c = fgetc(in);
-    while (!feof(in))
+    int c = fgetc(in);
+    while (c != EOF)
     {
         if (pack(c, codes, bit_stream))
         {
@@ -230,7 +230,7 @@ int decode(FILE *in, FILE *out, char terminal_mode)
         return error_code;
     }
 
-    while (!feof(in))
+    for(;;)
     {
         unsigned char c;
         if (unpack(root, bit_stream, &c))

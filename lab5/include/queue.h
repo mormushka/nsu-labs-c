@@ -20,7 +20,7 @@ typedef struct tqueue
 tqueue *create_queue(void);
 int is_empty(tqueue *queue);
 int push(ttree *node, tqueue *queue);
-tqueue *build_priority_queue(unsigned *hist, int len);
+tqueue *build_priority_queue(size_t *hist, int len);
 ttree *pop_min(tqueue *queue);
 
 #endif

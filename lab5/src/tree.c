@@ -1,7 +1,7 @@
 #include "queue.h"
 #include "tree.h"
 
-ttree *create_tree_node(const unsigned char symbol, const unsigned freq, ttree *left, ttree *right)
+ttree *create_tree_node(const unsigned char symbol, const size_t freq, ttree *left, ttree *right)
 {
     ttree *node = malloc(sizeof(ttree));
     if (!node)
@@ -85,7 +85,7 @@ ttree *unpack_tree(tbit_stream *bit_stream, int *error_code)
     return tmp;
 }
 
-ttree *create_tree(unsigned *hist)
+ttree *create_tree(size_t *hist)
 {
     if (hist == NULL)
     {
@@ -103,7 +103,7 @@ ttree *create_tree(unsigned *hist)
     tqueue_node *tmp = priority_queue->head;
     while (tmp)
     {
-        fprintf(stderr, "%.2x - %u\n", (int)(tmp->node->symbol), tmp->node->freq);
+        fprintf(stderr, "%.2x - %zu\n", (int)(tmp->node->symbol), tmp->node->freq);
         tmp = tmp->next;
     }
     fprintf(stderr, "# END PRIOTITY QUEUE\n\n");

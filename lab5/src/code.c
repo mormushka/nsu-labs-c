@@ -28,7 +28,7 @@ code *make_code_table(ttree *root)
     return codes;
 }
 
-int pack(const unsigned char c, code *codes, tbit_stream *bit_stream)
+int pack(const int c, code *codes, tbit_stream *bit_stream)
 {
     for (int i = codes[c].length - 1; i >= 0; i--)
     {

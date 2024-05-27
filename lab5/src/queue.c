@@ -59,7 +59,7 @@ int push(ttree *node, tqueue *queue)
     return EXIT_SUCCESS;
 }
 
-tqueue *build_priority_queue(unsigned *hist, int len)
+tqueue *build_priority_queue(size_t *hist, int len)
 {
     tqueue *priority_queue = create_queue();
     if (!priority_queue)

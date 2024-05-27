@@ -14,6 +14,6 @@ typedef struct code
 } code;
 
 code *make_code_table(ttree *root);
-int pack(unsigned char c, code *codes, tbit_stream *bit_stream);
+int pack(const int c, code *codes, tbit_stream *bit_stream);
 
 #endif
