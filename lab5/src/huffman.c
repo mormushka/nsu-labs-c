@@ -26,6 +26,47 @@ unsigned *calc_hist(FILE *file)
     return hist;
 }
 
+int math_len_shift(code *codes, unsigned *hist)
+{
+    int len = 0;
+    int n = 0;
+    for (int i = 0; i < ALPHABET_SIZE; ++i)
+    {
+        if (hist[i])
+        {
+            len = (len + codes[i].length * hist[i]) % 8;
+            n++;
+        }
+    }
+    return 8 - ((len + 2 * n - 1) % 8);
+}
+
+int shift(code *codes, unsigned *hist, tbit_stream *bit_stream)
+{
+    int len_shift = math_len_shift(codes, hist);
+    if (len_shift == 0)
+    {
+        for (int i = 1; i <= 8; ++i)
+        {
+            if (write_bit(i == 8, bit_stream))
+            {
+                return EIO;
+            }
+        }
+    }
+    else
+    {
+        for (int i = 1; i <= len_shift; ++i)
+        {
+            if (write_bit(i == len_shift, bit_stream))
+            {
+                return EIO;
+            }
+        }
+    }
+    return EXIT_SUCCESS;
+}
+
 int encode(FILE *in, FILE *out, char terminal_mode)
 {
     if (fgetc(in) == EOF)
@@ -84,6 +125,7 @@ int encode(FILE *in, FILE *out, char terminal_mode)
         return ENOMEM;
     }
 
+#if 0
     unsigned length = root->freq;
     if (fwrite(&length, sizeof(unsigned), 1, out) != 1)
     {
@@ -92,6 +134,16 @@ int encode(FILE *in, FILE *out, char terminal_mode)
         free(codes);
         free(hist);
         DEBUG_PRINT("Output error");
+        return EIO;
+    }
+#endif
+
+    if (shift(codes, hist, bit_stream))
+    {
+        destroy_tree(root);
+        free(bit_stream);
+        free(codes);
+        free(hist);
         return EIO;
     }
 
@@ -108,7 +160,7 @@ int encode(FILE *in, FILE *out, char terminal_mode)
     while (!feof(in))
     {
         if (pack(c, codes, bit_stream))
-        {   
+        {
             free(bit_stream);
             destroy_tree(root);
             free(codes);
@@ -146,11 +198,22 @@ int decode(FILE *in, FILE *out, char terminal_mode)
         return ENOMEM;
     }
 
+#if 0
     unsigned length;
     if (fread(&length, sizeof(unsigned), 1, in) != 1)
     {
         DEBUG_PRINT("Input error");
         return EIO;
+    }
+#endif
+    int bit0 = 0;
+    while (!bit0)
+    {
+        if (read_bit(bit_stream, &bit0))
+        {
+            free(bit_stream);
+            return EIO;
+        }
     }
 
     int error_code = 0;
@@ -167,14 +230,14 @@ int decode(FILE *in, FILE *out, char terminal_mode)
         return error_code;
     }
 
-    for (unsigned i = 0; i < length; i++)
+    while (!feof(in))
     {
         unsigned char c;
         if (unpack(root, bit_stream, &c))
         {
             destroy_tree(root);
             free(bit_stream);
-            return EIO;
+            return EXIT_SUCCESS;
         }
         if (fwrite(&c, sizeof(char), 1, out) != 1)
         {

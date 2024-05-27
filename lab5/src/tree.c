@@ -143,6 +143,17 @@ ttree *create_tree(unsigned *hist)
 
 int unpack(ttree *root, tbit_stream *bit_stream, unsigned char *c)
 {
+    if (is_leaf(root))
+    {
+        int bit;
+        if (read_bit(bit_stream, &bit))
+        {
+            return EIO;
+        }
+        *c = root->symbol;
+        return EXIT_SUCCESS;
+    }
+
     ttree *curr_node = root;
     while (!is_leaf(curr_node))
     {
