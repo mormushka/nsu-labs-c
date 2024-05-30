@@ -27,12 +27,14 @@ code *make_code_table(ttree *root)
         return NULL;
     }
     code *codes = calloc(sizeof(code), ALPHABET_SIZE);
-    if (codes == NULL)
+    char *code = calloc(sizeof(char), ALPHABET_SIZE);
+    if ((!codes) || (!code))
     {
         DEBUG_PRINT("Memory allocation failed");
+        free(code);
+        free(codes);
         return NULL;
     }
-    char *code = calloc(sizeof(char), ALPHABET_SIZE);
     get_code(root, codes, code, 0);
     free(code);
     return codes;
@@ -44,6 +46,7 @@ int pack(const int c, code *codes, tbit_stream *bit_stream)
     {
         if (write_bit(codes[c].code[i], bit_stream))
         {
+            DEBUG_PRINT("");
             return EIO;
         }
     }

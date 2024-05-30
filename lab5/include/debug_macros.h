@@ -1,7 +1,7 @@
 #ifndef DEBUG_MACROS_H
 #define DEBUG_MACROS_H
 
-#if 1
+#if 0
 #define NDEBUG
 #endif
         

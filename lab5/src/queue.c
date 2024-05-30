@@ -3,11 +3,12 @@
 #include <errno.h>
 #include <stdlib.h>
 
-tqueue *create_queue(void)
+tqueue *create_queue()
 {
     tqueue *queue = malloc(sizeof(*queue));
     if (!queue)
     {
+        DEBUG_PRINT("Memory allocation failed");
         return NULL;
     }
     queue->head = NULL;
@@ -19,6 +20,7 @@ static tqueue_node *create_queue_node(ttree *node)
     tqueue_node *queue_node = malloc(sizeof(struct tqueue_node));
     if (!queue_node)
     {
+        DEBUG_PRINT("Memory allocation failed");
         return NULL;
     }
     queue_node->node = node;
@@ -67,6 +69,7 @@ tqueue *build_priority_queue(size_t *hist, int len)
     tqueue *priority_queue = create_queue();
     if (!priority_queue)
     {
+        DEBUG_PRINT("");
         return NULL;
     }
     for (int i = 0; i < len; i++)
@@ -77,11 +80,13 @@ tqueue *build_priority_queue(size_t *hist, int len)
             if (!node)
             {
                 free(priority_queue);
+                DEBUG_PRINT("");
                 return NULL;
             }
             if (push(node, priority_queue))
             {
                 free(priority_queue);
+                DEBUG_PRINT("");
                 return NULL;
             }
         }

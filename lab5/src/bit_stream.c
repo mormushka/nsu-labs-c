@@ -62,6 +62,7 @@ int read_byte(tbit_stream *bit_stream, unsigned char *byte)
         int bit;
         if (read_bit(bit_stream, &bit))
         {
+            DEBUG_PRINT("");
             return EIO;
         }
         *byte = *byte | bit;
@@ -77,6 +78,7 @@ int write_byte(const unsigned char byte, tbit_stream *bit_stream)
         int bit = (byte >> i) & 1;
         if (write_bit(bit, bit_stream))
         {
+            DEBUG_PRINT("");
             return EIO;
         }
     }

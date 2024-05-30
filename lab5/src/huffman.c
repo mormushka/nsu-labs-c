@@ -57,6 +57,7 @@ static int shift(code *codes, size_t *hist, tbit_stream *bit_stream)
         {
             if (write_bit(i == 8, bit_stream))
             {
+                DEBUG_PRINT("");
                 return EIO;
             }
         }
@@ -67,6 +68,7 @@ static int shift(code *codes, size_t *hist, tbit_stream *bit_stream)
         {
             if (write_bit(i == len_shift, bit_stream))
             {
+                DEBUG_PRINT("");
                 return EIO;
             }
         }
@@ -104,18 +106,15 @@ int encode(FILE *in, FILE *out, char terminal_mode)
     ttree *root = create_tree(hist);
     code *codes = make_code_table(root);
 
-#if 0
+#ifndef NDEBUG
     fprintf(stderr, "# CODES TABLE:\n");
     for (int i = 0; i < ALPHABET_SIZE; i++)
     {
-        unsigned long long k = codes[i].code;
         if (codes[i].length)
         {
-            fprintf(stderr, "%.2x - ", i);
             for (int j = 0; j < codes[i].length; j++)
             {
-                fprintf(stderr, "%llu", k & 1);
-                k = (k >> 1);
+                fprintf(stderr, "%d", codes[i].code[j]);    
             }
             fprintf(stderr, "\n");
         }
@@ -129,21 +128,9 @@ int encode(FILE *in, FILE *out, char terminal_mode)
         free(bit_stream);
         free(codes);
         free(hist);
+        DEBUG_PRINT("");
         return ENOMEM;
     }
-
-#if 0
-    unsigned length = root->freq;
-    if (fwrite(&length, sizeof(unsigned), 1, out) != 1)
-    {
-        destroy_tree(root);
-        free(bit_stream);
-        free(codes);
-        free(hist);
-        DEBUG_PRINT("Output error");
-        return EIO;
-    }
-#endif
 
     if (shift(codes, hist, bit_stream))
     {
@@ -151,6 +138,7 @@ int encode(FILE *in, FILE *out, char terminal_mode)
         free(bit_stream);
         free(codes);
         free(hist);
+        DEBUG_PRINT("");
         return EIO;
     }
 
@@ -160,6 +148,7 @@ int encode(FILE *in, FILE *out, char terminal_mode)
         free(bit_stream);
         free(codes);
         free(hist);
+        DEBUG_PRINT("");
         return EIO;
     }
 
@@ -172,6 +161,7 @@ int encode(FILE *in, FILE *out, char terminal_mode)
             destroy_tree(root);
             free(codes);
             free(hist);
+            DEBUG_PRINT("");
             return EIO;
         }
         c = fgetc(in);
@@ -182,6 +172,7 @@ int encode(FILE *in, FILE *out, char terminal_mode)
     if (flush(bit_stream))
     {
         free(bit_stream);
+        DEBUG_PRINT("");
         return EIO;
     }
     free(bit_stream);
@@ -202,42 +193,32 @@ int decode(FILE *in, FILE *out, char terminal_mode)
     tbit_stream *bit_stream = create_bit_stream(in);
     if (!bit_stream)
     {
+        DEBUG_PRINT("");
         return ENOMEM;
     }
 
-#if 0
-    unsigned length;
-    if (fread(&length, sizeof(unsigned), 1, in) != 1)
-    {
-        DEBUG_PRINT("Input error");
-        return EIO;
-    }
-#endif
     int bit0 = 0;
     while (!bit0)
     {
         if (read_bit(bit_stream, &bit0))
         {
             free(bit_stream);
+            DEBUG_PRINT("");
             return EIO;
         }
     }
 
     int error_code = 0;
     ttree *root = unpack_tree(bit_stream, &error_code);
-    if (!root)
-    {
-        free(bit_stream);
-        return ENOMEM;
-    }
     if (error_code)
     {
         destroy_tree(root);
         free(bit_stream);
+        DEBUG_PRINT("");
         return error_code;
     }
 
-    for(;;)
+    for (;;)
     {
         unsigned char c;
         if (unpack(root, bit_stream, &c))
@@ -248,9 +229,9 @@ int decode(FILE *in, FILE *out, char terminal_mode)
         }
         if (fwrite(&c, sizeof(char), 1, out) != 1)
         {
-            DEBUG_PRINT("Output error");
             destroy_tree(root);
             free(bit_stream);
+            DEBUG_PRINT("Output error");
             return EIO;
         }
     }
