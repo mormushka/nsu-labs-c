@@ -2,10 +2,6 @@
 #define BIT_STREAM_H
 
 #include <stdio.h>
-#include <stdlib.h>
-#include <errno.h>
-#include "debug_macros.h"
-#include "constants.h"
 
 typedef struct tbit_stream
 {

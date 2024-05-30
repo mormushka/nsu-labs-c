@@ -1,4 +1,11 @@
 #include "huffman.h"
+#include "code.h"
+#include "bit_stream.h"
+#include "tree.h"
+#include "constants.h"
+#include "debug_macros.h"
+#include <errno.h>
+#include <stdlib.h>
 
 void print_usage()
 {
@@ -8,7 +15,7 @@ void print_usage()
     printf("<file.out> - output file\n");
 }
 
-size_t *calc_hist(FILE *file)
+static size_t *calc_hist(FILE *file)
 {
     size_t *hist = calloc(ALPHABET_SIZE, sizeof(size_t));
     if (hist == NULL)
@@ -26,7 +33,7 @@ size_t *calc_hist(FILE *file)
     return hist;
 }
 
-int math_len_shift(code *codes, size_t *hist)
+static int math_len_shift(code *codes, size_t *hist)
 {
     int len = 0;
     int n = 0;
@@ -41,7 +48,7 @@ int math_len_shift(code *codes, size_t *hist)
     return 8 - ((len + 2 * n - 1) % 8);
 }
 
-int shift(code *codes, size_t *hist, tbit_stream *bit_stream)
+static int shift(code *codes, size_t *hist, tbit_stream *bit_stream)
 {
     int len_shift = math_len_shift(codes, hist);
     if (len_shift == 0)
@@ -97,7 +104,7 @@ int encode(FILE *in, FILE *out, char terminal_mode)
     ttree *root = create_tree(hist);
     code *codes = make_code_table(root);
 
-#ifndef NDEBUG
+#if 0
     fprintf(stderr, "# CODES TABLE:\n");
     for (int i = 0; i < ALPHABET_SIZE; i++)
     {
@@ -247,8 +254,4 @@ int decode(FILE *in, FILE *out, char terminal_mode)
             return EIO;
         }
     }
-
-    destroy_tree(root);
-    free(bit_stream);
-    return EXIT_SUCCESS;
 }

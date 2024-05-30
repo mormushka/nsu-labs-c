@@ -1,4 +1,7 @@
 #include "queue.h"
+#include "debug_macros.h"
+#include <errno.h>
+#include <stdlib.h>
 
 tqueue *create_queue(void)
 {
@@ -11,7 +14,7 @@ tqueue *create_queue(void)
     return queue;
 }
 
-tqueue_node *create_queue_node(ttree *node)
+static tqueue_node *create_queue_node(ttree *node)
 {
     tqueue_node *queue_node = malloc(sizeof(struct tqueue_node));
     if (!queue_node)

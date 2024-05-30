@@ -1,15 +1,23 @@
 #include "code.h"
+#include "debug_macros.h"
+#include <stdlib.h>
+#include <errno.h>
 
-void get_code(ttree *root, code *codes, const unsigned long long code, const int cur_len)
+static void get_code(ttree *root, code *codes, char code[ALPHABET_SIZE], const int cur_len)
 {
     if (is_leaf(root))
     {
-        codes[root->symbol].code = code;
+        for (int i = 0; i < cur_len; ++i)
+        {
+            codes[root->symbol].code[i] = code[i];
+        }
         codes[root->symbol].length = cur_len ? cur_len : (cur_len + 1);
         return;
     }
-    get_code(root->left, codes, code << 1, cur_len + 1);
-    get_code(root->right, codes, (code << 1) | 1, cur_len + 1);
+    code[cur_len] = 0;
+    get_code(root->left, codes, code, cur_len + 1);
+    code[cur_len] = 1;
+    get_code(root->right, codes, code, cur_len + 1);
 }
 
 code *make_code_table(ttree *root)
@@ -18,22 +26,23 @@ code *make_code_table(ttree *root)
     {
         return NULL;
     }
-    code *codes = malloc(sizeof(code) * ALPHABET_SIZE);
+    code *codes = calloc(sizeof(code), ALPHABET_SIZE);
     if (codes == NULL)
     {
         DEBUG_PRINT("Memory allocation failed");
         return NULL;
     }
-    get_code(root, codes, 0, 0);
+    char *code = calloc(sizeof(char), ALPHABET_SIZE);
+    get_code(root, codes, code, 0);
+    free(code);
     return codes;
 }
 
 int pack(const int c, code *codes, tbit_stream *bit_stream)
 {
-    for (int i = codes[c].length - 1; i >= 0; i--)
+    for (int i = 0; i < codes[c].length; ++i)
     {
-        int bit = (codes[c].code >> i) & 1;
-        if (write_bit(bit, bit_stream))
+        if (write_bit(codes[c].code[i], bit_stream))
         {
             return EIO;
         }

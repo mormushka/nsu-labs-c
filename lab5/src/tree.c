@@ -1,5 +1,9 @@
-#include "queue.h"
 #include "tree.h"
+#include "queue.h"
+#include "constants.h"
+#include "debug_macros.h"
+#include <stdlib.h>
+#include <errno.h>
 
 ttree *create_tree_node(const unsigned char symbol, const size_t freq, ttree *left, ttree *right)
 {

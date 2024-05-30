@@ -1,4 +1,8 @@
 #include "bit_stream.h"
+#include "debug_macros.h"
+#include "constants.h"
+#include <stdlib.h>
+#include <errno.h>
 
 tbit_stream *create_bit_stream(FILE *file)
 {

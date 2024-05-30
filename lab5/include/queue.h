@@ -2,9 +2,6 @@
 #define QUEUE_H
 
 #include "tree.h"
-#include "debug_macros.h"
-#include <errno.h>
-#include <stdlib.h>
 
 typedef struct tqueue_node
 {

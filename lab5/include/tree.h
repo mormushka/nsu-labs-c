@@ -1,10 +1,7 @@
 #ifndef TREE_H
 #define TREE_H
 
-#include "constants.h"
 #include "bit_stream.h"
-#include "debug_macros.h"
-#include <stdlib.h>
 
 typedef struct ttree
 {
