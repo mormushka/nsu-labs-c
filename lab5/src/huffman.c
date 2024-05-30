@@ -4,8 +4,10 @@
 #include "tree.h"
 #include "constants.h"
 #include "debug_macros.h"
+#include "progress_bar.h"
 #include <errno.h>
 #include <stdlib.h>
+#include <time.h>
 
 void print_usage()
 {
@@ -23,12 +25,35 @@ static size_t *calc_hist(FILE *file)
         DEBUG_PRINT("Memory allocation failed");
         return NULL;
     }
+
+#ifdef ON_PROGRESS_BAR
+    fprintf(stderr, "\n CALC_HIST: \n");
+    size_t f_size = file_size(file);
+    size_t cur_pos = ftell(file);
+    size_t reload_p = f_size / 100;
+    size_t p = 0;
+#endif
+
+    time_t start;
+    time(&start);
+
     int curr_symbol = fgetc(file);
     while (curr_symbol != EOF)
     {
         hist[curr_symbol] += 1;
         curr_symbol = fgetc(file);
+#ifdef ON_PROGRESS_BAR
+        if (++p == reload_p)
+        {
+            print_progress((double)(cur_pos += p) / f_size);
+            p = 0;
+        }
+#endif
     }
+
+    time_t end;
+    time(&end);
+    fprintf(stderr, "\nCakl_hist took %.2lf seconds to run.\n", difftime(end, start));
 
     return hist;
 }
@@ -114,7 +139,7 @@ int encode(FILE *in, FILE *out, char terminal_mode)
         {
             for (int j = 0; j < codes[i].length; j++)
             {
-                fprintf(stderr, "%d", codes[i].code[j]);    
+                fprintf(stderr, "%d", codes[i].code[j]);
             }
             fprintf(stderr, "\n");
         }
@@ -152,6 +177,17 @@ int encode(FILE *in, FILE *out, char terminal_mode)
         return EIO;
     }
 
+#ifdef ON_PROGRESS_BAR
+    fprintf(stderr, "\n PACK: \n");
+    size_t f_size = file_size(in);
+    size_t cur_pos = ftell(in);
+    size_t reload_p = f_size / 100;
+    size_t p = 0;
+#endif
+
+    time_t start;
+    time(&start);
+
     int c = fgetc(in);
     while (c != EOF)
     {
@@ -164,8 +200,23 @@ int encode(FILE *in, FILE *out, char terminal_mode)
             DEBUG_PRINT("");
             return EIO;
         }
+#ifdef ON_PROGRESS_BAR
+        if (++p == reload_p)
+        {
+            print_progress((double)(cur_pos += p) / f_size);
+            p = 0;
+        }
+#endif
         c = fgetc(in);
     }
+#ifdef ON_PROGRESS_BAR
+    print_progress((double)cur_pos / f_size);
+#endif
+
+    time_t end;
+    time(&end);
+    fprintf(stderr, "\nPack took %.2lf seconds to run.\n", difftime(end, start));
+
     destroy_tree(root);
     free(codes);
     free(hist);
@@ -181,6 +232,8 @@ int encode(FILE *in, FILE *out, char terminal_mode)
 
 int decode(FILE *in, FILE *out, char terminal_mode)
 {
+    time_t start;
+    time(&start);
     if (fgetc(in) == EOF)
     {
         return EXIT_SUCCESS;
@@ -217,6 +270,12 @@ int decode(FILE *in, FILE *out, char terminal_mode)
         DEBUG_PRINT("");
         return error_code;
     }
+#ifdef ON_PROGRESS_BAR
+    fprintf(stderr, "\n UNPACK: \n");
+    size_t f_size = file_size(in);
+    size_t reload_p = file_size(in) / 40;
+    size_t p = 0;
+#endif
 
     for (;;)
     {
@@ -225,6 +284,12 @@ int decode(FILE *in, FILE *out, char terminal_mode)
         {
             destroy_tree(root);
             free(bit_stream);
+#ifdef ON_PROGRESS_BAR
+            print_progress(((double)ftell(in)) / f_size);
+#endif
+            time_t end;
+            time(&end);
+            fprintf(stderr, "\nUnpack took %.2lf seconds to run.\n", difftime(end, start));
             return EXIT_SUCCESS;
         }
         if (fwrite(&c, sizeof(char), 1, out) != 1)
@@ -234,5 +299,12 @@ int decode(FILE *in, FILE *out, char terminal_mode)
             DEBUG_PRINT("Output error");
             return EIO;
         }
+#ifdef ON_PROGRESS_BAR
+        if (++p == reload_p)
+        {
+            print_progress(((double)ftell(in)) / f_size);
+            p = 0;
+        }
+#endif
     }
 }
