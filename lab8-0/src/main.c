@@ -1,200 +1,171 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <errno.h>
+#include <limits.h>
 
-enum
-{
-    N_MAX = 5000,
-    I_MAX = 2147483647,
-};
+#define N_MAX 5000
 
-typedef struct Item
+typedef struct t_item
 {
     int start;
     int end;
     int weight;
-} Item;
+} t_item;
 
-void createItem(int start, int end, int weight, Item *item)
+void fill_item(int start, int end, int weight, t_item *item)
 {
     item->end = end;
     item->start = start;
     item->weight = weight;
 }
 
-int readData(FILE *flIn, int *n, int *m)
+int read_data(int *n, int *m)
 {
-    if (fscanf(flIn, "%d", n) < 1)
+    if (scanf("%d %d", n, m) < 2)
     {
-        printf("bad number of lines");
-        return 1;
+        printf("bad number of lines\n");
+        return EXIT_FAILURE;
     }
-    if (*n < 0 || *n > N_MAX)
+    if ((*n < 0) || (*n > N_MAX))
     {
-        printf("bad number of vertices");
-        return 1;
+        printf("bad number of vertices\n");
+        return EXIT_FAILURE;
     }
-    if (fscanf(flIn, "%d", m) < 1)
+    if ((*m < 0) || (*m > ((*n + 1) / 2) * (*n)))
     {
-        printf("bad number of lines");
-        return 1;
+        printf("bad number of edges\n");
+        return EXIT_FAILURE;
     }
-    int maxim = ((*n + 1) / 2) * (*n);
-    if (*m < 0 || *m > maxim)
-    {
-        printf("bad number of edges");
-        return 1;
-    }
-    if (*n == 0)
-    {
-        printf("no spanning tree");
-        return 1;
-    }
-    return 0;
+    return EXIT_SUCCESS;
 }
 
-int buildGraph(FILE *fl, int m, int n, Item *itemList)
+int build_graph(int n, int m, t_item *items)
 {
     int start, end;
     long long int weight;
     for (int i = 0; i < m; ++i)
     {
-        if (fscanf(fl, "%d %d %lld", &start, &end, &weight) < 1)
+        if (scanf("%d %d %lld", &start, &end, &weight) < 1)
         {
-            printf("bad number of lines");
+            printf("bad number of lines\n");
+            return EXIT_FAILURE;
+        }
+        if ((start < 0) || (start > n) || (end < 0) || (end > n))
+        {
+            printf("bad vertex\n");
+            return EXIT_FAILURE;
+        }
+        if ((weight > INT_MAX) || (weight < 0))
+        {
+            printf("bad length\n");
+            return EXIT_FAILURE;
+        }
+        fill_item(start, end, (int)weight, &items[i]);
+    }
+    return EXIT_SUCCESS;
+}
+
+int find_set(int *parent, int x)
+{
+    return (x == parent[x]) ? x : (parent[x] = find_set(parent, parent[x]));
+}
+
+void union_set(int x, int y, int *parent)
+{
+    parent[find_set(parent, x)] = find_set(parent, y);
+}
+
+int compare(const void *av, const void *bv)
+{
+    return ((t_item *)av)->weight - ((t_item *)bv)->weight;
+}
+
+int check_mst(char *marker, int n)
+{
+    for (int i = 0; i < n; ++i)
+    {
+        if (marker[i])
+        {
             return 1;
         }
-        if (start < 0 || start > n || end < 0 || end > n)
-        {
-            printf("bad vertex");
-            return 1;
-        }
-        if (weight > I_MAX || weight < 0)
-        {
-            printf("bad length");
-            return 1;
-        }
-        createItem(start, end, (int)weight, &itemList[i]);
     }
     return 0;
 }
 
-int isInTree(int trees[], int val)
+int kruskal(t_item *items, int n, int m)
 {
-    if (trees[val] == val)
-    {
-        return val;
-    }
-    trees[val] = isInTree(trees, trees[val]);
-    return trees[val];
-}
-
-void swap(int *a, int *b)
-{
-    int temp = *b;
-    *b = *a;
-    *a = temp;
-}
-
-void uniteTrees(int startNode, int endNode, int trees[])
-{
-    int start = isInTree(trees, startNode);
-    int end = isInTree(trees, endNode);
-    swap(&start, &end);
-    if (start != end)
-    {
-        trees[start] = end;
-    }
-}
-
-int compare(const void *a, const void *b)
-{
-    Item *a1 = (Item *)a;
-    Item *b1 = (Item *)b;
-    return a1->weight - b1->weight;
-}
-
-int kruskalAlgorithm(Item *itemList, char *marker, int n, int m)
-{
-    int trees[n];
-    int index = 0;
-    int cost = 0;
+    int parent[n];
+    char marker[n];
     for (int i = 0; i < n; ++i)
     {
-        trees[i] = i;
+        parent[i] = i;
         marker[i] = 1;
     }
 
-    if (m > 0)
-    {
-        qsort(itemList, m, sizeof(*itemList), compare);
-    }
+    qsort(items, m, sizeof(*items), compare);
 
+    int j = 0;
     for (int i = 0; i < m; ++i)
     {
-        Item currentItem = itemList[i];
-        int start = currentItem.start;
-        int end = currentItem.end;
-        int weight = currentItem.weight;
-        if (isInTree(trees, start - 1) != isInTree(trees, end - 1))
+        if (find_set(parent, items[i].start - 1) != find_set(parent, items[i].end - 1))
         {
-            cost += weight;
-            uniteTrees(start - 1, end - 1, trees);
-            itemList[index].start = start;
-            itemList[index].end = end;
-            marker[start - 1] = 0;
-            marker[end - 1] = 0;
-            index++;
+            union_set(items[i].start - 1, items[i].end - 1, parent);
+            items[j].start = items[i].start;
+            items[j].end = items[i].end;
+            marker[items[i].start - 1] = 0;
+            marker[items[i].end - 1] = 0;
+            j++;
         }
     }
-    return index;
-}
 
-int checkTree(char *marker, int n)
-{
-    for (int i = 0; i < n; ++i)
-        if (marker[i])
-            return 1;
-    return 0;
+    if ((n == 0) || (check_mst(marker, n) && (n != 1)))
+    {
+        return -1;
+    }
+
+    return j;
 }
 
 int main()
 {
     int n, m;
-    FILE *fl = fopen("in.txt", "r");
-    if (readData(fl, &n, &m))
+    if (read_data(&n, &m))
     {
-        fclose(fl);
-        return 0;
+        return EXIT_SUCCESS;
     }
 
-    Item *itemList = malloc(sizeof(Item) * m);
-    if (buildGraph(fl, m, n, itemList))
+    t_item *items = malloc(sizeof(t_item) * m);
+    if (!items)
     {
-        free(itemList);
-        fclose(fl);
-        return 0;
+        return ENOMEM;
+    }
+    if (build_graph(n, m, items))
+    {
+        free(items);
+        return EXIT_SUCCESS;
     }
 
-    char marker[n];
-    int index = kruskalAlgorithm(itemList, marker, n, m);
-    int flag = checkTree(marker, n);
+    int len_mst = kruskal(items, n, m);
 
-    if (flag && n != 1)
+    if (len_mst == -1)
     {
         printf("no spanning tree\n");
+        free(items);
+        return EXIT_SUCCESS;
     }
-    else
+
+    for (int i = 0; i < len_mst; ++i)
     {
-        for (int i = 0; i < index; ++i)
+        if (items[i].start > items[i].end)
         {
-            if (itemList[i].start > itemList[i].end)
-            {
-                swap(&itemList[i].start, &itemList[i].end);
-            }
-            printf("%d %d\n", itemList[i].start, itemList[i].end);
+            printf("%d %d\n", items[i].end, items[i].start);
+        }
+        else
+        {
+            printf("%d %d\n", items[i].start, items[i].end);
         }
     }
-    free(itemList);
-    fclose(fl);
-    return 0;
+
+    free(items);
+    return EXIT_SUCCESS;
 }
