@@ -4,8 +4,8 @@
 #include <stdio.h>
 
 #define ON_PROGRESS_BAR
-#define ON_DIF_TIME11
-#define NDEBUG11
+#define ON_DIF_TIME
+#define NDEBUG21
 
 void print_usage();
 int encode(FILE *in, FILE *out, char terminal_mode);

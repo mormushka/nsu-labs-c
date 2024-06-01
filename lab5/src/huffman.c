@@ -34,8 +34,10 @@ static size_t *calc_hist(FILE *file)
     size_t p = 0;
 #endif
 
+#ifdef ON_DIF_TIME
     time_t start;
     time(&start);
+#endif
 
     int curr_symbol = fgetc(file);
     while (curr_symbol != EOF)
@@ -51,9 +53,11 @@ static size_t *calc_hist(FILE *file)
 #endif
     }
 
+#ifdef ON_DIF_TIME
     time_t end;
     time(&end);
     fprintf(stderr, "\nCakl_hist took %.2lf seconds to run.\n", difftime(end, start));
+#endif
 
     return hist;
 }
@@ -185,8 +189,10 @@ int encode(FILE *in, FILE *out, char terminal_mode)
     size_t p = 0;
 #endif
 
+#ifdef ON_DIF_TIME
     time_t start;
     time(&start);
+#endif
 
     int c = fgetc(in);
     while (c != EOF)
@@ -213,9 +219,11 @@ int encode(FILE *in, FILE *out, char terminal_mode)
     print_progress((double)cur_pos / f_size);
 #endif
 
+#ifdef ON_DIF_TIME
     time_t end;
     time(&end);
     fprintf(stderr, "\nPack took %.2lf seconds to run.\n", difftime(end, start));
+#endif
 
     destroy_tree(root);
     free(codes);
@@ -232,8 +240,10 @@ int encode(FILE *in, FILE *out, char terminal_mode)
 
 int decode(FILE *in, FILE *out, char terminal_mode)
 {
+#ifdef ON_DIF_TIME
     time_t start;
     time(&start);
+#endif
     if (fgetc(in) == EOF)
     {
         return EXIT_SUCCESS;
@@ -287,9 +297,11 @@ int decode(FILE *in, FILE *out, char terminal_mode)
 #ifdef ON_PROGRESS_BAR
             print_progress(((double)ftell(in)) / f_size);
 #endif
+#ifdef ON_DIF_TIME
             time_t end;
             time(&end);
             fprintf(stderr, "\nUnpack took %.2lf seconds to run.\n", difftime(end, start));
+#endif
             return EXIT_SUCCESS;
         }
         if (fwrite(&c, sizeof(char), 1, out) != 1)
