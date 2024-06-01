@@ -80,50 +80,38 @@ int compare(const void *av, const void *bv)
     return ((t_item *)av)->weight - ((t_item *)bv)->weight;
 }
 
-int check_mst(char *marker, int n)
-{
-    for (int i = 0; i < n; ++i)
-    {
-        if (marker[i])
-        {
-            return 1;
-        }
-    }
-    return 0;
-}
-
 int kruskal(t_item *items, int n, int m)
 {
     int parent[n];
-    char marker[n];
     for (int i = 0; i < n; ++i)
     {
         parent[i] = i;
-        marker[i] = 1;
     }
 
     qsort(items, m, sizeof(*items), compare);
 
-    int j = 0;
+    int len_mst = 0;
     for (int i = 0; i < m; ++i)
     {
         if (find_set(parent, items[i].start - 1) != find_set(parent, items[i].end - 1))
         {
             union_set(items[i].start - 1, items[i].end - 1, parent);
-            items[j].start = items[i].start;
-            items[j].end = items[i].end;
-            marker[items[i].start - 1] = 0;
-            marker[items[i].end - 1] = 0;
-            j++;
+            items[len_mst].start = items[i].start;
+            items[len_mst].end = items[i].end;
+            len_mst++;
+        }
+        if (len_mst == (n - 1))
+        {
+            break;
         }
     }
 
-    if ((n == 0) || (check_mst(marker, n) && (n != 1)))
+    if (len_mst != (n - 1))
     {
         return -1;
     }
 
-    return j;
+    return len_mst;
 }
 
 int main()
